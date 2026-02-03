@@ -82,25 +82,29 @@
         /* Custom Cursor */
         .cursor {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 24px;
             height: 24px;
             border: 2px solid var(--gold);
             border-radius: 50%;
             pointer-events: none;
             z-index: 10000;
-            transition: transform 0.15s ease-out, border-color 0.2s;
+            will-change: transform;
             mix-blend-mode: difference;
         }
 
         .cursor-dot {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 6px;
             height: 6px;
             background: var(--gold);
             border-radius: 50%;
             pointer-events: none;
             z-index: 10001;
-            transition: transform 0.1s;
+            will-change: transform;
         }
 
         .cursor.clicking {
@@ -163,11 +167,13 @@
         .orb {
             position: fixed;
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.25;
-            animation: float 25s ease-in-out infinite;
+            filter: blur(60px);
+            opacity: 0.2;
+            animation: float 30s ease-in-out infinite;
             z-index: -1;
             pointer-events: none;
+            will-change: transform;
+            contain: layout style;
         }
 
         .orb-1 {
@@ -1117,23 +1123,20 @@
         document.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
             mouseY = e.clientY;
-            cursorDot.style.left = mouseX - 3 + 'px';
-            cursorDot.style.top = mouseY - 3 + 'px';
+            cursorDot.style.transform = `translate(${mouseX - 3}px, ${mouseY - 3}px)`;
+        }, { passive: true });
 
-            // Occasional particle trail
-            if (Math.random() < 0.08) {
-                createParticle(mouseX, mouseY);
+        let lastCursorFrame = 0;
+        function animateCursor(timestamp) {
+            if (timestamp - lastCursorFrame >= 16) {
+                lastCursorFrame = timestamp;
+                cursorX += (mouseX - cursorX) * 0.15;
+                cursorY += (mouseY - cursorY) * 0.15;
+                cursor.style.transform = `translate(${cursorX - 12}px, ${cursorY - 12}px)`;
             }
-        });
-
-        function animateCursor() {
-            cursorX += (mouseX - cursorX) * 0.12;
-            cursorY += (mouseY - cursorY) * 0.12;
-            cursor.style.left = cursorX - 12 + 'px';
-            cursor.style.top = cursorY - 12 + 'px';
             requestAnimationFrame(animateCursor);
         }
-        animateCursor();
+        animateCursor(0);
 
         document.addEventListener('mousedown', () => cursor.classList.add('clicking'));
         document.addEventListener('mouseup', () => cursor.classList.remove('clicking'));
@@ -1194,25 +1197,23 @@
         // ============ STARFIELD ============
         const starfield = document.getElementById('starfield');
         const starData = [];
+        const STAR_COUNT = 50; // Reduced from 120 for better performance
         
-        for (let i = 0; i < 120; i++) {
+        // Use DocumentFragment for batch DOM insertion
+        const fragment = document.createDocumentFragment();
+        for (let i = 0; i < STAR_COUNT; i++) {
             const star = document.createElement('div');
             star.className = 'star';
             const size = Math.random() * 3 + 1;
             const x = Math.random() * 100;
             const y = Math.random() * 100;
             
-            star.style.width = size + 'px';
-            star.style.height = size + 'px';
-            star.style.left = x + '%';
-            star.style.top = y + '%';
-            star.style.setProperty('--duration', (Math.random() * 4 + 2) + 's');
-            star.style.setProperty('--base-opacity', Math.random() * 0.5 + 0.3);
-            star.style.animationDelay = Math.random() * 5 + 's';
+            star.style.cssText = `width:${size}px;height:${size}px;left:${x}%;top:${y}%;--duration:${Math.random() * 4 + 2}s;--base-opacity:${Math.random() * 0.5 + 0.3};animation-delay:${Math.random() * 5}s`;
             
-            starfield.appendChild(star);
+            fragment.appendChild(star);
             starData.push({ element: star, baseX: x, baseY: y });
         }
+        starfield.appendChild(fragment);
         
         // Simple scroll parallax
         let scrollOffset = 0;
@@ -1236,20 +1237,19 @@
 
         function generateConstellation() {
             constellationPoints = [];
-            const count = 25; // Reduced from 40 for better performance
+            const count = 15; // Reduced for better performance
             for (let i = 0; i < count; i++) {
+                const x = Math.random() * constellation.width;
+                const y = Math.random() * constellation.height;
                 constellationPoints.push({
-                    x: Math.random() * constellation.width,
-                    y: Math.random() * constellation.height,
-                    vx: (Math.random() - 0.5) * 0.2,
-                    vy: (Math.random() - 0.5) * 0.2,
-                    baseX: 0,
-                    baseY: 0,
+                    x, y,
+                    vx: (Math.random() - 0.5) * 0.15,
+                    vy: (Math.random() - 0.5) * 0.15,
+                    baseX: x,
+                    baseY: y,
                     glowing: false,
                     glowIntensity: 0
                 });
-                constellationPoints[i].baseX = constellationPoints[i].x;
-                constellationPoints[i].baseY = constellationPoints[i].y;
             }
         }
 
@@ -1284,65 +1284,67 @@
             }
         });
 
-        function drawConstellation() {
+        let lastConstellationFrame = 0;
+        const FRAME_INTERVAL = 33; // ~30fps instead of 60fps
+        
+        function drawConstellation(timestamp) {
+            // Throttle to 30fps
+            if (timestamp - lastConstellationFrame < FRAME_INTERVAL) {
+                requestAnimationFrame(drawConstellation);
+                return;
+            }
+            lastConstellationFrame = timestamp;
+            
             conCtx.clearRect(0, 0, constellation.width, constellation.height);
             
-            // Drift based on scroll
             const driftX = scrollOffset * 0.5;
             const driftY = scrollOffset * 0.3;
+            const time = timestamp * 0.01;
 
-            // Update positions
-            constellationPoints.forEach(p => {
-                p.x = p.baseX + p.vx * performance.now() * 0.01 + driftX;
-                p.y = p.baseY + p.vy * performance.now() * 0.01 + driftY;
+            // Batch path operations
+            conCtx.beginPath();
+            
+            // Update positions and draw connections in one pass
+            for (let i = 0; i < constellationPoints.length; i++) {
+                const p = constellationPoints[i];
+                p.x = p.baseX + p.vx * time + driftX;
+                p.y = p.baseY + p.vy * time + driftY;
                 
                 // Wrap around
                 if (p.x < -50) p.baseX += constellation.width + 100;
-                if (p.x > constellation.width + 50) p.baseX -= constellation.width + 100;
+                else if (p.x > constellation.width + 50) p.baseX -= constellation.width + 100;
                 if (p.y < -50) p.baseY += constellation.height + 100;
-                if (p.y > constellation.height + 50) p.baseY -= constellation.height + 100;
+                else if (p.y > constellation.height + 50) p.baseY -= constellation.height + 100;
                 
-                // Fade glow
                 if (p.glowing) {
-                    p.glowIntensity -= 0.01;
-                    if (p.glowIntensity <= 0) {
-                        p.glowing = false;
-                        p.glowIntensity = 0;
-                    }
+                    p.glowIntensity -= 0.02;
+                    if (p.glowIntensity <= 0) { p.glowing = false; p.glowIntensity = 0; }
                 }
-            });
-
-            // Draw connections
-            constellationPoints.forEach((p1, i) => {
-                constellationPoints.slice(i + 1).forEach(p2 => {
-                    const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-                    if (dist < 180) {
-                        const alpha = 0.08 * (1 - dist / 180);
-                        const glowBoost = (p1.glowIntensity + p2.glowIntensity) * 0.3;
-                        conCtx.beginPath();
+            }
+            
+            // Draw connections with single stroke style
+            conCtx.strokeStyle = 'rgba(212, 175, 55, 0.08)';
+            conCtx.lineWidth = 1;
+            for (let i = 0; i < constellationPoints.length; i++) {
+                const p1 = constellationPoints[i];
+                for (let j = i + 1; j < constellationPoints.length; j++) {
+                    const p2 = constellationPoints[j];
+                    const dx = p1.x - p2.x, dy = p1.y - p2.y;
+                    if (dx * dx + dy * dy < 32400) { // 180^2, avoid Math.hypot
                         conCtx.moveTo(p1.x, p1.y);
                         conCtx.lineTo(p2.x, p2.y);
-                        conCtx.strokeStyle = `rgba(212, 175, 55, ${alpha + glowBoost})`;
-                        conCtx.lineWidth = 1 + glowBoost * 2;
-                        conCtx.stroke();
                     }
-                });
-
-                // Draw point
-                const glowSize = 2 + p1.glowIntensity * 6;
-                conCtx.beginPath();
-                conCtx.arc(p1.x, p1.y, glowSize, 0, Math.PI * 2);
-                conCtx.fillStyle = `rgba(212, 175, 55, ${0.5 + p1.glowIntensity * 0.5})`;
-                conCtx.fill();
-                
-                // Draw glow halo
-                if (p1.glowIntensity > 0) {
-                    conCtx.beginPath();
-                    conCtx.arc(p1.x, p1.y, glowSize + 10, 0, Math.PI * 2);
-                    conCtx.fillStyle = `rgba(212, 175, 55, ${p1.glowIntensity * 0.2})`;
-                    conCtx.fill();
                 }
-            });
+            }
+            conCtx.stroke();
+            
+            // Draw points
+            conCtx.fillStyle = 'rgba(212, 175, 55, 0.6)';
+            for (const p of constellationPoints) {
+                conCtx.beginPath();
+                conCtx.arc(p.x, p.y, 2 + p.glowIntensity * 4, 0, Math.PI * 2);
+                conCtx.fill();
+            }
 
             requestAnimationFrame(drawConstellation);
         }
