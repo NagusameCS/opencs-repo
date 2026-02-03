@@ -233,11 +233,36 @@
                 const content = document.getElementById('content');
                 
                 if (data.error) {
+                    // Check for specific error types
+                    let icon = '💔';
+                    let title = data.error;
+                    let message = data.message || 'Please try again later';
+                    
+                    if (data.error === 'no_match' || data.error === 'No Match Found') {
+                        icon = '😔';
+                        title = 'No Match Found';
+                        message = `Sorry, your account doesn't have a match associated with it.<br><br>
+                            <strong>Possible reasons:</strong><br>
+                            • Make sure you're logged in with the right account<br>
+                            • You may not have submitted the forms on time<br>
+                            • There wasn't a compatible match available<br><br>
+                            <span style="color:#999;font-size:0.9rem;">Don't worry - there's always next year! 💕</span>`;
+                    } else if (data.error === 'results_not_ready') {
+                        icon = '⏳';
+                        title = 'Results Not Ready Yet';
+                        message = 'The matchmaking process hasn\'t been completed yet.<br><br>Please check back later!';
+                    } else if (data.error === 'not_submitted') {
+                        icon = '📝';
+                        title = 'No Submission Found';
+                        message = `We couldn't find a questionnaire submission for your account.<br><br>
+                            Make sure you're logged in with the same account you used to fill out the form.`;
+                    }
+                    
                     content.innerHTML = `
                         <div class="no-matches">
-                            <div class="no-matches-icon">💔</div>
-                            <h2>${data.error}</h2>
-                            <p>${data.message || 'Please try again later'}</p>
+                            <div class="no-matches-icon">${icon}</div>
+                            <h2>${title}</h2>
+                            <p style="line-height:1.6;">${message}</p>
                             <div class="actions">
                                 <a href="./" class="btn btn-primary">🏠 Back to Home</a>
                             </div>

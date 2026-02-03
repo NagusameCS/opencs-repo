@@ -806,10 +806,17 @@
             <button class="btn btn-sm btn-secondary" onclick="clearTestMode()">Exit Test Mode</button>
         </div>
         
+        <!-- Results Toggle Banner -->
+        <div class="results-toggle-banner" id="resultsToggleBanner" style="display:none;background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:15px 25px;border-radius:12px;margin-bottom:20px;font-weight:600;text-align:center;align-items:center;justify-content:center;gap:15px;">
+            🎉 RESULTS ARE VISIBLE - Forms are currently closed
+            <button class="btn btn-sm" style="background:white;color:#28a745;margin-left:15px;" onclick="toggleResults()">Hide Results</button>
+        </div>
+        
         <!-- Header -->
         <div class="header">
             <h1>💕 Valentin Matchmaking Admin</h1>
             <div class="header-actions">
+                <button class="btn btn-success" id="toggleResultsBtn" onclick="toggleResults()">👁️ Show Results</button>
                 <button class="btn btn-warning" onclick="generateGhosts()">👻 Generate 500 Ghosts</button>
                 <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh Data</button>
                 <button class="btn btn-secondary" onclick="downloadData()">📥 Download JSON</button>
@@ -989,6 +996,74 @@
         let isAuthenticated = false;
         let isTestMode = false;
         let pendingConfirmAction = null;
+        let resultsVisible = false;
+        
+        // ============================================
+        // RESULTS TOGGLE
+        // ============================================
+        async function checkResultsStatus() {
+            try {
+                const resp = await fetch('/sites/valentin/api/status');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    resultsVisible = data.resultsVisible || false;
+                    updateResultsToggleUI();
+                }
+            } catch (e) {
+                console.log('Could not check results status:', e);
+            }
+        }
+        
+        function updateResultsToggleUI() {
+            const btn = document.getElementById('toggleResultsBtn');
+            const banner = document.getElementById('resultsToggleBanner');
+            
+            if (resultsVisible) {
+                btn.textContent = '🔒 Hide Results';
+                btn.className = 'btn btn-danger';
+                banner.style.display = 'flex';
+            } else {
+                btn.textContent = '👁️ Show Results';
+                btn.className = 'btn btn-success';
+                banner.style.display = 'none';
+            }
+        }
+        
+        async function toggleResults() {
+            const newState = !resultsVisible;
+            const action = newState ? 'show results (this will close forms!)' : 'hide results (this will reopen forms)';
+            
+            if (!confirm(`Are you sure you want to ${action}?`)) {
+                return;
+            }
+            
+            try {
+                showLoading(newState ? 'Enabling results...' : 'Hiding results...');
+                
+                // Use the API endpoint to toggle results
+                const resp = await fetch('/sites/valentin/api/toggle-results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resultsVisible: newState })
+                });
+                
+                if (!resp.ok) {
+                    throw new Error('Failed to toggle results');
+                }
+                
+                resultsVisible = newState;
+                updateResultsToggleUI();
+                
+                log(newState ? 'Results are now VISIBLE - forms are closed!' : 'Results are now HIDDEN - forms are open', 'success');
+                showToast(newState ? '🎉 Results are now visible!' : '🔒 Results hidden, forms reopened', 'success');
+                hideLoading();
+                
+            } catch (error) {
+                log(`Error toggling results: ${error.message}`, 'error');
+                showToast('Failed to toggle results', 'error');
+                hideLoading();
+            }
+        }
         
         // ============================================
         // AUTH
@@ -1029,6 +1104,7 @@
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContainer').classList.add('active');
             log('Authenticated successfully', 'success');
+            checkResultsStatus();
             refreshData();
         }
         

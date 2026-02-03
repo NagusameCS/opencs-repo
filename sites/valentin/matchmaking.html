@@ -351,7 +351,14 @@
             <p>Manage submissions and calculate matches</p>
         </div>
 
+        <!-- Results Toggle Banner -->
+        <div class="results-toggle-banner" id="resultsToggleBanner" style="display:none;background:linear-gradient(135deg,#28a745,#20c997);color:white;padding:15px 25px;border-radius:12px;margin-bottom:20px;font-weight:600;text-align:center;">
+            🎉 RESULTS ARE VISIBLE - Forms are currently closed
+            <button class="btn btn-sm" style="background:white;color:#28a745;margin-left:15px;padding:8px 20px;border:none;border-radius:20px;font-weight:600;cursor:pointer;" onclick="toggleResults()">Hide Results</button>
+        </div>
+
         <div class="actions-bar">
+            <button class="btn btn-primary" id="toggleResultsBtn" onclick="toggleResults()" style="background:#28a745;">👁️ Show Results</button>
             <button class="btn btn-primary" onclick="calculateMatches()">🔄 Calculate Matches</button>
             <button class="btn btn-secondary" onclick="loadData()">📊 Refresh Data</button>
             <button class="btn btn-secondary" onclick="window.open('/portal', '_blank')">🔐 Portal</button>
@@ -523,8 +530,75 @@
             }, 5000);
         }
         
+        // ============================================
+        // RESULTS TOGGLE
+        // ============================================
+        let resultsVisible = false;
+        
+        async function checkResultsStatus() {
+            try {
+                const resp = await fetch('/sites/valentin/api/status');
+                if (resp.ok) {
+                    const data = await resp.json();
+                    resultsVisible = data.resultsVisible || false;
+                    updateResultsToggleUI();
+                }
+            } catch (e) {
+                console.log('Could not check results status:', e);
+            }
+        }
+        
+        function updateResultsToggleUI() {
+            const btn = document.getElementById('toggleResultsBtn');
+            const banner = document.getElementById('resultsToggleBanner');
+            
+            if (resultsVisible) {
+                btn.textContent = '🔒 Hide Results';
+                btn.style.background = '#dc3545';
+                banner.style.display = 'block';
+            } else {
+                btn.textContent = '👁️ Show Results';
+                btn.style.background = '#28a745';
+                banner.style.display = 'none';
+            }
+        }
+        
+        async function toggleResults() {
+            const newState = !resultsVisible;
+            const action = newState ? 'show results (this will close forms!)' : 'hide results (this will reopen forms)';
+            
+            if (!confirm(`Are you sure you want to ${action}?`)) {
+                return;
+            }
+            
+            try {
+                showMessage(newState ? 'Enabling results...' : 'Hiding results...', 'success');
+                
+                // Use the API endpoint to toggle results
+                const resp = await fetch('/sites/valentin/api/toggle-results', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resultsVisible: newState })
+                });
+                
+                if (!resp.ok) {
+                    throw new Error('Failed to toggle results');
+                }
+                
+                resultsVisible = newState;
+                updateResultsToggleUI();
+                
+                showMessage(newState ? '🎉 Results are now visible!' : '🔒 Results hidden, forms reopened', 'success');
+                
+            } catch (error) {
+                console.error('Error toggling results:', error);
+                showMessage('Failed to toggle results: ' + error.message, 'error');
+            }
+        }
+        
         // Load data on page load
         loadData();
+        checkResultsStatus();
     </script>
 </body>
 </html>

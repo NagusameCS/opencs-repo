@@ -46,6 +46,7 @@ const GALLERY_DIR = path.join(CONFIG_DIR, 'gallery');
 const CONTACTS_FILE = path.join(CONFIG_DIR, 'contacts.json');
 const VALENTIN_SUBMISSIONS_FILE = path.join(CONFIG_DIR, 'valentin_submissions.json');
 const VALENTIN_MATCHES_FILE = path.join(CONFIG_DIR, 'valentin_matches.json');
+const VALENTIN_SETTINGS_FILE = path.join(CONFIG_DIR, 'valentin_settings.json');
 
 // Ensure gallery directory exists
 if (!fs.existsSync(GALLERY_DIR)) {
@@ -506,6 +507,17 @@ function saveValentinMatches(data) {
     fs.writeFileSync(VALENTIN_MATCHES_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
 }
 
+function getValentinSettings() {
+    if (fs.existsSync(VALENTIN_SETTINGS_FILE)) {
+        return JSON.parse(fs.readFileSync(VALENTIN_SETTINGS_FILE, 'utf8'));
+    }
+    return { resultsVisible: false, formsClosed: false };
+}
+
+function saveValentinSettings(data) {
+    fs.writeFileSync(VALENTIN_SETTINGS_FILE, JSON.stringify(data, null, 2), { mode: 0o600 });
+}
+
 // ============ VALENTIN API ROUTES ============
 
 // Valentin API routes (must be before static file serving)
@@ -604,6 +616,35 @@ app.get('/sites/valentin/api/results', (req, res) => {
             error: 'Failed to load results',
             message: error.message 
         });
+    }
+});
+
+// Get valentin status (results visibility, form state)
+app.get('/sites/valentin/api/status', (req, res) => {
+    try {
+        const settings = getValentinSettings();
+        res.json({
+            resultsVisible: settings.resultsVisible || false,
+            formsClosed: settings.formsClosed || settings.resultsVisible || false
+        });
+    } catch (error) {
+        console.error('Valentin status error:', error);
+        res.json({ resultsVisible: false, formsClosed: false });
+    }
+});
+
+// Toggle valentin results visibility (for admin)
+app.post('/sites/valentin/api/toggle-results', express.json(), (req, res) => {
+    try {
+        const { resultsVisible } = req.body;
+        const settings = getValentinSettings();
+        settings.resultsVisible = resultsVisible;
+        settings.formsClosed = resultsVisible; // Forms close when results are shown
+        saveValentinSettings(settings);
+        res.json({ success: true, resultsVisible, formsClosed: settings.formsClosed });
+    } catch (error) {
+        console.error('Valentin toggle error:', error);
+        res.status(500).json({ error: 'Failed to toggle results', message: error.message });
     }
 });
 

@@ -1,40 +1,40 @@
 // Question definitions with icons
 const fixedQuestions = [
     { id: "gender", type: "select", question: "What is your gender?", options: ["Male", "Female", "Prefer not to say"], icons: ["👨", "👩", "🤐"] },
-    { id: "gender_pref", type: "select", question: "Gender Preference", options: ["Male", "Female", "No Preference"], icons: ["👨", "👩", "💕"] },
+    { id: "gender_pref", type: "select", question: "Who are you interested in?", options: ["Male", "Female", "No Preference"], icons: ["👨", "👩", "💕"] },
     { id: "grade", type: "number", question: "What grade are you in?", min: 9, max: 12 },
     { id: "age", type: "number", question: "How old are you?", min: 13, max: 19 }
 ];
 
 const randomQuestions = [
-    { id: "location", type: "map", question: "Where do you want to live?" },
+    { id: "location", type: "map", question: "Where do you dream of living someday?" },
     { id: "extrovert_introvert", type: "slider", question: "How social are you?", minLabel: "🤫 Introverted", maxLabel: "Extroverted 🎉" },
-    { id: "qualities_prefer", type: "multi-slider", question: "Qualities you prefer in a partner", items: [
+    { id: "qualities_prefer", type: "multi-slider", question: "What qualities do you look for in a partner?", items: [
         { name: "Intelligence", icon: "🧠" }, { name: "Strength", icon: "💪" }, { name: "Confidence", icon: "😎" }, { name: "Humor", icon: "😂" }, { name: "Kindness", icon: "💝" }
     ]},
-    { id: "qualities_have", type: "multi-slider", question: "Rate your own qualities", items: [
+    { id: "qualities_have", type: "multi-slider", question: "How would you rate your own qualities?", items: [
         { name: "Intelligence", icon: "🧠" }, { name: "Strength", icon: "💪" }, { name: "Confidence", icon: "😎" }, { name: "Humor", icon: "😂" }, { name: "Kindness", icon: "💝" }
     ]},
-    { id: "fav_subject", type: "grid", question: "What is your favorite subject?", options: [
+    { id: "fav_subject", type: "grid", question: "What's your favorite subject?", options: [
         { name: "Math", icon: "📐" }, { name: "Science", icon: "🔬" }, { name: "Art", icon: "🎨" }, { name: "History", icon: "📜" },
         { name: "English", icon: "📚" }, { name: "PE", icon: "⚽" }, { name: "Music", icon: "🎵" }, { name: "CS", icon: "💻" }
     ]},
-    { id: "music_genre", type: "grid", question: "Favorite Music Genre", options: [
-        { name: "Pop", icon: "🎤" }, { name: "Rock", icon: "🎸" }, { name: "Hip Hop", icon: "🎧" }, { name: "Jazz", icon: "🎷" },
-        { name: "Classical", icon: "🎻" }, { name: "Country", icon: "🤠" }, { name: "EDM", icon: "🎹" }, { name: "Indie", icon: "🌟" }
+    { id: "music_genre", type: "grid", question: "What music do you vibe to?", options: [
+        { name: "Pop", icon: "🎤" }, { name: "Rock", icon: "🎸" }, { name: "Hip Hop", icon: "🎧" }, { name: "R&B", icon: "🎵" },
+        { name: "Classical", icon: "🎻" }, { name: "Latin", icon: "💃" }, { name: "EDM", icon: "🎹" }, { name: "Indie", icon: "🌟" }
     ]},
     { id: "text_call", type: "binary", question: "Text or Call?", options: [{ name: "Text", icon: "💬" }, { name: "Call", icon: "📞" }] },
-    { id: "fav_color", type: "color", question: "What is your favorite color?" },
-    { id: "ice_cream", type: "ice-cream", question: "Favorite Ice Cream Flavor", options: [
+    { id: "fav_color", type: "color", question: "What's your favorite color?", subtitle: "👆 Click the heart below to pick your color!" },
+    { id: "ice_cream", type: "ice-cream", question: "Pick your favorite ice cream flavor!", options: [
         { name: "Vanilla", color: "#FFF8DC" }, { name: "Chocolate", color: "#8B4513" },
         { name: "Strawberry", color: "#FFB6C1" }, { name: "Mint", color: "#98FF98" }, { name: "Cookie Dough", color: "#D2B48C" }
     ]},
-    { id: "sleep_time", type: "clock", question: "When do you usually go to sleep?" },
-    { id: "social_battery", type: "battery", question: "How much social energy do you have?" },
-    { id: "fav_season", type: "season", question: "Favorite Season", options: [
+    { id: "sleep_time", type: "clock", question: "What time do you usually go to sleep?" },
+    { id: "social_battery", type: "battery", question: "How's your social battery usually?", subtitle: "Tap a level to select" },
+    { id: "fav_season", type: "season", question: "What's your favorite season?", options: [
         { name: "Spring", icon: "🌸" }, { name: "Summer", icon: "☀️" }, { name: "Autumn", icon: "🍂" }, { name: "Winter", icon: "❄️" }
     ]},
-    { id: "date_ideas", type: "rank", question: "Rank these date ideas", options: ["🎬 Movie", "🍽️ Dinner", "🌳 Park", "🎮 Arcade", "🏛️ Museum"] },
+    { id: "date_ideas", type: "rank", question: "Rank these date ideas (best to worst)", options: ["🎬 Movie", "🍽️ Dinner", "🌳 Park", "🎮 Arcade", "🏛️ Museum"] },
     { id: "home_out", type: "binary", question: "Stay Home or Go Out?", options: [{ name: "Home", icon: "🏠" }, { name: "Going Out", icon: "🚗" }] },
     { id: "city_country", type: "binary", question: "City or Countryside?", options: [{ name: "City", icon: "🏙️" }, { name: "Countryside", icon: "🌾" }] }
 ];
@@ -117,6 +117,65 @@ function parseOAuthToken(callback) {
     }
 }
 
+// Check if results are visible (forms are closed)
+async function checkResultsStatus() {
+    try {
+        const resp = await fetch('/sites/valentin/api/status');
+        if (resp.ok) {
+            const data = await resp.json();
+            return data;
+        }
+    } catch (e) {
+        console.log('Could not check results status:', e);
+    }
+    return { resultsVisible: false, formsClosed: false };
+}
+
+// Show message that form is closed or already submitted
+function showFormClosedMessage(reason, email) {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    
+    let title, message, icon;
+    
+    if (reason === 'already_submitted') {
+        icon = '💕';
+        title = 'Already Submitted!';
+        message = `You've already completed the questionnaire${email ? ' with ' + email : ''}.<br><br>
+            <strong>Come back on February 14th</strong> to see your match results! 🎉<br><br>
+            <span style="font-size:0.9rem;color:#999;">Can't wait to show you who you matched with! 💘</span>`;
+    } else if (reason === 'results_visible') {
+        icon = '🔒';
+        title = 'Forms are Closed';
+        message = `The questionnaire is now closed and results are being processed!<br><br>
+            <strong>Come back on February 14th</strong> to see the matches! 💕<br><br>
+            <span style="font-size:0.9rem;color:#999;">We're excited to reveal everyone's matches soon!</span>`;
+    } else {
+        icon = '⏰';
+        title = 'Come Back Later';
+        message = 'The questionnaire is currently not available. Please check back soon!';
+    }
+    
+    container.innerHTML = `
+        <div class="question-card" style="text-align:center;padding:60px 40px;">
+            <div style="font-size:5rem;margin-bottom:20px;">${icon}</div>
+            <h2 style="color:#ff4d6d;margin-bottom:20px;font-size:2rem;">${title}</h2>
+            <p style="color:#666;font-size:1.1rem;line-height:1.6;max-width:400px;margin:0 auto 30px;">${message}</p>
+            <a href="./" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;text-decoration:none;border-radius:50px;font-weight:600;box-shadow:0 6px 20px rgba(255,77,109,0.3);">
+                ← Back to Home
+            </a>
+        </div>
+    `;
+    
+    // Hide navigation
+    const nav = document.querySelector('.navigation');
+    if (nav) nav.style.display = 'none';
+    
+    // Hide progress bar
+    const progressContainer = document.querySelector('.progress-bar-container');
+    if (progressContainer) progressContainer.style.display = 'none';
+}
+
 let container, progressBar, prevBtn, nextBtn, questionNumber, successModal, mapInstance;
 
 function createFloatingHearts() {
@@ -150,11 +209,27 @@ document.addEventListener("DOMContentLoaded", function() {
     
     createFloatingHearts();
     
-    // Parse OAuth token and get user email, then render questions
+    // Parse OAuth token and get user email, then check status and render questions
     console.log("Calling parseOAuthToken");
-    parseOAuthToken(function(success) {
+    parseOAuthToken(async function(success) {
         console.log("parseOAuthToken callback, success:", success);
         if (success && container && prevBtn && nextBtn) {
+            // Check if results are visible (forms closed)
+            const status = await checkResultsStatus();
+            if (status.formsClosed || status.resultsVisible) {
+                showFormClosedMessage('results_visible');
+                return;
+            }
+            
+            // Check if user already submitted
+            const submittedCookie = document.cookie.split(';').find(c => c.trim().startsWith('valentin_submitted='));
+            const emailCookie = document.cookie.split(';').find(c => c.trim().startsWith('valentin_email='));
+            if (submittedCookie && submittedCookie.includes('true')) {
+                const email = emailCookie ? decodeURIComponent(emailCookie.split('=')[1]) : '';
+                showFormClosedMessage('already_submitted', email);
+                return;
+            }
+            
             console.log("About to render first question");
             console.log("Current question index:", currentQuestionIndex);
             renderQuestion();
@@ -525,8 +600,18 @@ function renderColor(q) {
     wrapper.className = "color-picker-wrapper animate-in";
     wrapper.style.cssText = "display:flex;flex-direction:column;align-items:center;";
     
+    // Add instruction hint if subtitle exists
+    if (q.subtitle) {
+        const hint = document.createElement("div");
+        hint.style.cssText = "text-align:center;margin-bottom:20px;font-size:1.1rem;color:#666;font-weight:500;background:#fff5f7;padding:12px 20px;border-radius:12px;border:2px dashed #ffb3c1;";
+        hint.innerHTML = q.subtitle;
+        wrapper.appendChild(hint);
+    }
+    
     const heartContainer = document.createElement("div");
-    heartContainer.style.cssText = "position:relative;width:150px;height:150px;cursor:pointer;";
+    heartContainer.style.cssText = "position:relative;width:150px;height:150px;cursor:pointer;transition:transform 0.2s;";
+    heartContainer.addEventListener("mouseenter", () => heartContainer.style.transform = "scale(1.05)");
+    heartContainer.addEventListener("mouseleave", () => heartContainer.style.transform = "scale(1)");
     
     const input = document.createElement("input");
     input.type = "color";
@@ -606,13 +691,13 @@ function renderClock(q) {
     
     const clockFace = document.createElement("div");
     clockFace.className = "analog-clock";
-    clockFace.style.cssText = "position:relative;width:200px;height:200px;border-radius:50%;background:white;border:4px solid #ff4d6d;margin:0 auto;box-shadow:0 8px 30px rgba(255,77,109,0.2);cursor:pointer;user-select:none;";
+    clockFace.style.cssText = "position:relative;width:180px;height:180px;border-radius:50%;background:white;border:4px solid #ff4d6d;margin:0 auto;box-shadow:0 8px 30px rgba(255,77,109,0.2);cursor:pointer;user-select:none;";
     
     // Add hour markers
     for (let i = 0; i < 12; i++) {
         const tick = document.createElement("div");
         tick.className = "clock-tick" + (i % 3 === 0 ? " major" : "");
-        tick.style.cssText = "position:absolute;top:50%;left:50%;width:2px;height:10px;background:#999;transform-origin:center;transform:translate(-50%,-100px) rotate(" + (i * 30) + "deg);";
+        tick.style.cssText = "position:absolute;top:50%;left:50%;width:2px;height:10px;background:#999;transform-origin:center;transform:translate(-50%,-90px) rotate(" + (i * 30) + "deg);";
         if (i % 3 === 0) {
             tick.style.height = "12px";
             tick.style.width = "3px";
@@ -626,30 +711,44 @@ function renderClock(q) {
             const hour = i === 0 ? 12 : i;
             num.textContent = hour;
             const angle = i * 30 * Math.PI / 180;
-            const x = 75 * Math.sin(angle);
-            const y = -75 * Math.cos(angle);
-            num.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(calc(-50% + " + x + "px), calc(-50% + " + y + "px));font-weight:600;color:#333;font-size:1.1rem;pointer-events:none;";
+            const x = 65 * Math.sin(angle);
+            const y = -65 * Math.cos(angle);
+            num.style.cssText = "position:absolute;top:50%;left:50%;transform:translate(calc(-50% + " + x + "px), calc(-50% + " + y + "px));font-weight:600;color:#333;font-size:1rem;pointer-events:none;";
             clockFace.appendChild(num);
         }
     }
     
     const centerDot = document.createElement("div");
     centerDot.className = "clock-center";
-    centerDot.style.cssText = "position:absolute;top:50%;left:50%;width:16px;height:16px;background:#ff4d6d;border-radius:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;";
+    centerDot.style.cssText = "position:absolute;top:50%;left:50%;width:14px;height:14px;background:#ff4d6d;border-radius:50%;transform:translate(-50%,-50%);z-index:20;pointer-events:none;";
     clockFace.appendChild(centerDot);
     
     const hourHand = document.createElement("div");
-    hourHand.style.cssText = "position:absolute;bottom:50%;left:50%;width:8px;height:50px;background:linear-gradient(to top,#ff4d6d,#ff8fa3);border-radius:4px;transform-origin:bottom center;transform:translateX(-50%);z-index:10;pointer-events:none;";
+    hourHand.style.cssText = "position:absolute;bottom:50%;left:50%;width:7px;height:45px;background:linear-gradient(to top,#ff4d6d,#ff8fa3);border-radius:4px;transform-origin:bottom center;transform:translateX(-50%);z-index:10;pointer-events:none;transition:transform 0.2s ease;";
     clockFace.appendChild(hourHand);
-    
-    const display = document.createElement("div");
-    display.className = "clock-display";
-    display.style.cssText = "text-align:center;margin-top:20px;font-size:2rem;font-weight:700;color:#333;";
     
     let hours = 22;
     if (answers[q.id] !== undefined) {
         hours = parseInt(answers[q.id]);
     }
+    
+    // Time picker with +/- buttons
+    const timePickerRow = document.createElement("div");
+    timePickerRow.style.cssText = "display:flex;align-items:center;justify-content:center;gap:15px;margin-top:20px;";
+    
+    const minusBtn = document.createElement("button");
+    minusBtn.type = "button";
+    minusBtn.textContent = "−";
+    minusBtn.style.cssText = "width:45px;height:45px;border:none;background:linear-gradient(135deg,#ff4d6d,#ff8fa3);color:white;font-size:1.8rem;border-radius:50%;cursor:pointer;transition:all 0.2s;font-weight:bold;box-shadow:0 4px 15px rgba(255,77,109,0.3);line-height:1;";
+    
+    const display = document.createElement("div");
+    display.className = "clock-display";
+    display.style.cssText = "min-width:120px;text-align:center;font-size:2rem;font-weight:700;color:#333;background:#f9f9f9;padding:10px 20px;border-radius:12px;border:2px solid #eee;";
+    
+    const plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.textContent = "+";
+    plusBtn.style.cssText = "width:45px;height:45px;border:none;background:linear-gradient(135deg,#ff4d6d,#ff8fa3);color:white;font-size:1.8rem;border-radius:50%;cursor:pointer;transition:all 0.2s;font-weight:bold;box-shadow:0 4px 15px rgba(255,77,109,0.3);line-height:1;";
     
     function updateClock() {
         const hourDeg = (hours % 12) * 30;
@@ -658,6 +757,7 @@ function renderClock(q) {
         const ampm = hours >= 12 ? "PM" : "AM";
         display.textContent = h12 + ":00 " + ampm;
         answers[q.id] = hours;
+        updateAMPMButtons();
     }
     
     function getAngle(e, rect) {
@@ -670,6 +770,7 @@ function renderClock(q) {
         return angle;
     }
     
+    // Click on clock face to set hour
     clockFace.addEventListener("click", function(e) {
         e.stopPropagation();
         const rect = clockFace.getBoundingClientRect();
@@ -682,9 +783,34 @@ function renderClock(q) {
             hours = newHour === 0 ? 0 : newHour;
         }
         updateClock();
-        updateAMPMButtons();
     });
     
+    // +/- buttons to adjust hour
+    minusBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        hours = hours <= 0 ? 23 : hours - 1;
+        updateClock();
+    });
+    
+    plusBtn.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        hours = hours >= 23 ? 0 : hours + 1;
+        updateClock();
+    });
+    
+    // Hover effects for buttons
+    [minusBtn, plusBtn].forEach(btn => {
+        btn.addEventListener("mouseenter", () => { btn.style.transform = "scale(1.1)"; btn.style.boxShadow = "0 6px 20px rgba(255,77,109,0.4)"; });
+        btn.addEventListener("mouseleave", () => { btn.style.transform = "scale(1)"; btn.style.boxShadow = "0 4px 15px rgba(255,77,109,0.3)"; });
+    });
+    
+    timePickerRow.appendChild(minusBtn);
+    timePickerRow.appendChild(display);
+    timePickerRow.appendChild(plusBtn);
+    
+    // AM/PM toggle buttons
     const ampmToggle = document.createElement("div");
     ampmToggle.style.cssText = "display:flex;gap:10px;justify-content:center;margin-top:15px;";
     
@@ -719,7 +845,6 @@ function renderClock(q) {
             hours -= 12;
         }
         updateClock();
-        updateAMPMButtons();
     });
     
     pmBtn.addEventListener("click", function(e) {
@@ -729,20 +854,18 @@ function renderClock(q) {
             hours += 12;
         }
         updateClock();
-        updateAMPMButtons();
     });
     
     ampmToggle.appendChild(amBtn);
     ampmToggle.appendChild(pmBtn);
     
     const hint = document.createElement("div");
-    hint.style.cssText = "text-align:center;margin-top:10px;color:#999;font-size:0.9rem;";
-    hint.textContent = "Click on the clock to set hour, then choose AM/PM";
+    hint.style.cssText = "text-align:center;margin-top:12px;color:#999;font-size:0.85rem;";
+    hint.textContent = "Use +/− buttons or click clock face to set bedtime";
     
     updateClock();
-    updateAMPMButtons();
     wrapper.appendChild(clockFace);
-    wrapper.appendChild(display);
+    wrapper.appendChild(timePickerRow);
     wrapper.appendChild(ampmToggle);
     wrapper.appendChild(hint);
     container.appendChild(wrapper);
@@ -752,7 +875,15 @@ function renderBattery(q) {
     console.log("renderBattery called for question:", q.id);
     const wrapper = document.createElement("div");
     wrapper.className = "battery-wrapper animate-in";
-    wrapper.style.cssText = "display:flex;flex-direction:column;align-items:center;margin-top:40px;";
+    wrapper.style.cssText = "display:flex;flex-direction:column;align-items:center;margin-top:20px;";
+    
+    // Add hint if subtitle exists
+    if (q.subtitle) {
+        const hint = document.createElement("div");
+        hint.style.cssText = "text-align:center;margin-bottom:20px;font-size:1rem;color:#666;font-weight:500;";
+        hint.textContent = q.subtitle;
+        wrapper.appendChild(hint);
+    }
     
     const batteryOuter = document.createElement("div");
     batteryOuter.style.cssText = "position:relative;display:flex;flex-direction:column;";
