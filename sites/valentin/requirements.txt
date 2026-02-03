@@ -1,0 +1,8 @@
+flask
+pandas
+scipy
+cryptography
+requests
+numpy
+python-Levenshtein
+authlib

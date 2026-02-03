@@ -1,0 +1,22 @@
+# Source files (dist is published)
+src/
+
+# Config files
+tsconfig.json
+.gitignore
+
+# Dev files
+node_modules/
+*.log
+
+# Linehook badges (not needed for package)
+.linehook/
+
+# Local config
+.knowtif.json
+
+# Docs (hosted on GitHub Pages)
+docs/
+
+# GitHub specific
+.github/

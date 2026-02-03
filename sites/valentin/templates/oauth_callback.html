@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Success</title>
+    <style>
+        body { font-family: 'Poppins', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #ff6b9d, #c44569); color: white; }
+        .success { text-align: center; }
+        h1 { font-size: 3em; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="success">
+        <h1>✨ Success!</h1>
+        <p>You are now logged in. This window will close...</p>
+    </div>
+    <script>
+        if (window.opener) {
+            window.opener.postMessage('oauth_success', '*');
+            setTimeout(function() { window.close(); }, 1000);
+        } else {
+            window.location.href = '{{ url_for("questionnaire") }}';
+        }
+    </script>
+</body>
+</html>

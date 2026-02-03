@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentin Admin - Matchmaking Control 💕</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary-pink: #ff4d6d;
+            --primary-red: #c9184a;
+            --light-pink: #fff0f3;
+            --soft-pink: #ffccd5;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fff5f7 0%, #ffe0e6 50%, #ffd6e0 100%);
+            min-height: 100vh;
+        }
+        
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: white;
+            border-radius: 24px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(255, 77, 109, 0.15);
+            max-width: 450px;
+            width: 100%;
+        }
+        
+        .login-box h1 {
+            color: var(--primary-pink);
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+        
+        .login-box p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        /* Main App */
+        .app-container {
+            display: none;
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .app-container.active {
+            display: block;
+        }
+        
+        /* Header */
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header h1 {
+            color: var(--primary-pink);
+            font-size: 1.8rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            font-size: 0.95rem;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-red));
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 77, 109, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 77, 109, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary-pink);
+            border: 2px solid var(--primary-pink);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--light-pink);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+            color: #333;
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Test Mode Banner */
+        .test-mode-banner {
+            display: none;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #333;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            text-align: center;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .test-mode-banner.active {
+            display: flex;
+        }
+        
+        /* Delete Button in Table */
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .delete-btn:hover {
+            background: #fee;
+            color: var(--danger);
+        }
+        
+        /* Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal-box {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .modal-box h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .modal-box p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        
+        /* Panels */
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 1200px) {
+            .panels { grid-template-columns: 1fr; }
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-header h2 {
+            font-size: 1.2rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel-body {
+            padding: 20px 25px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        /* Submissions Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .data-table th {
+            background: #f8f8f8;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:hover {
+            background: #fff5f7;
+        }
+        
+        .email-badge {
+            font-weight: 600;
+            color: var(--primary-pink);
+            font-size: 0.85rem;
+        }
+        
+        /* Match Cards */
+        .match-card {
+            background: linear-gradient(135deg, #fff5f7, #ffe8ec);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+        
+        .match-card:hover {
+            border-color: var(--primary-pink);
+            transform: translateY(-2px);
+        }
+        
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .match-number {
+            background: var(--primary-pink);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        .match-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-pink);
+        }
+        
+        .match-people {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .match-person {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .match-person .email {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        
+        .match-person .details {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        
+        .match-heart {
+            font-size: 2rem;
+        }
+        
+        .match-breakdown {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+            display: none;
+        }
+        
+        .match-card.expanded .match-breakdown {
+            display: block;
+        }
+        
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 4px 0;
+        }
+        
+        .breakdown-label { color: #666; }
+        .breakdown-value { font-weight: 600; color: #333; }
+        
+        /* Controls Panel */
+        .controls-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+        
+        .control-group input,
+        .control-group select {
+            padding: 10px 14px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: var(--primary-pink);
+        }
+        
+        /* Weight Sliders */
+        .weight-slider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .weight-slider input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #eee;
+        }
+        
+        .weight-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary-pink);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .weight-value {
+            min-width: 45px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary-pink);
+        }
+        
+        /* Log Console */
+        .log-console {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 15px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #a0a0a0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            padding: 3px 0;
+        }
+        
+        .log-entry.success { color: #4ade80; }
+        .log-entry.warning { color: #fbbf24; }
+        .log-entry.error { color: #f87171; }
+        .log-entry.info { color: #60a5fa; }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+        
+        .empty-state .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #333;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        
+        .loading-overlay.active { display: flex; }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f0f0f0;
+            border-top-color: var(--primary-pink);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Key Gate */
+        .key-gate {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .key-gate.unlocked {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .key-drop-zone {
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px dashed rgba(255, 77, 109, 0.5);
+            border-radius: 30px;
+            padding: 80px 60px;
+            text-align: center;
+            max-width: 500px;
+            transition: all 0.3s ease;
+        }
+        
+        .key-drop-zone.dragover {
+            background: rgba(255, 77, 109, 0.15);
+            border-color: var(--primary-pink);
+            transform: scale(1.02);
+        }
+        
+        .key-drop-zone.error {
+            border-color: #dc3545;
+            animation: shake 0.5s ease;
+        }
+        
+        .key-drop-zone.success {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.15);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .key-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .key-drop-zone h2 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+        
+        .key-drop-zone p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+        
+        .key-filename {
+            color: var(--primary-pink);
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: rgba(255, 77, 109, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .key-status {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            min-height: 24px;
+        }
+        
+        .key-status.error { color: #dc3545; }
+        .key-status.success { color: #28a745; }
+    </style>
+</head>
+<body>
+    <!-- Key Gate -->
+    <div class="key-gate" id="keyGate">
+        <div class="key-drop-zone" id="keyDropZone">
+            <span class="key-icon">🔐</span>
+            <h2>Admin Access Required</h2>
+            <p>Drag and drop your key file to unlock</p>
+            <span class="key-filename">heart.key</span>
+            <div class="key-status" id="keyStatus"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Key Gate Security
+        const VALID_KEY_HASH = '8f7d9c2a1b3e5f4d6c8a0b2e4f6d8a0c2e4f6a8b0d2c4e6f8a0b2c4d6e8f0a2b'; // Will be set
+        
+        async function hashKey(content) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(content.trim());
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        async function validateKey(file) {
+            const status = document.getElementById('keyStatus');
+            const dropZone = document.getElementById('keyDropZone');
+            
+            if (file.name !== 'heart.key') {
+                status.textContent = '❌ Invalid file. Please use heart.key';
+                status.className = 'key-status error';
+                dropZone.classList.add('error');
+                setTimeout(() => dropZone.classList.remove('error'), 500);
+                return;
+            }
+            
+            const content = await file.text();
+            const hash = await hashKey(content);
+            
+            // The expected hash of the valid key
+            const expectedHash = 'a3f2d1c4b5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2';
+            
+            // For security, we check if the key content matches the expected pattern
+            const validKeyContent = 'WxrI4K+MnlUlkcQ1Z6cFIG1I98zuI52RY1+Dxd7DN90DN8iqyg0TsVdE8vv8mw+qqQJR8c6wbCDwaoXGP4wSRQ==';
+            
+            if (content.trim() === validKeyContent) {
+                status.textContent = '✅ Access granted!';
+                status.className = 'key-status success';
+                dropZone.classList.add('success');
+                
+                // Store session
+                sessionStorage.setItem('heartKeyValid', 'true');
+                
+                setTimeout(() => {
+                    document.getElementById('keyGate').classList.add('unlocked');
+                }, 800);
+            } else {
+                status.textContent = '❌ Invalid key';
+                status.className = 'key-status error';
+                dropZone.classList.add('error');
+                setTimeout(() => dropZone.classList.remove('error'), 500);
+            }
+        }
+        
+        // Check if already authenticated this session
+        if (sessionStorage.getItem('heartKeyValid') === 'true') {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('keyGate').classList.add('unlocked');
+            });
+        }
+        
+        // Drag and drop handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            const dropZone = document.getElementById('keyDropZone');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'));
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'));
+            });
+            
+            dropZone.addEventListener('drop', e => {
+                const file = e.dataTransfer.files[0];
+                if (file) validateKey(file);
+            });
+        });
+    </script>
+
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>💕 Valentin Admin</h1>
+            <p>Sign in via the portal to access matchmaking controls</p>
+            <button class="btn btn-primary" onclick="loginViaPortal()">
+                🔐 Sign in with Portal
+            </button>
+            <p style="margin-top: 20px; font-size: 0.85rem; color: #999;">
+                Calculations run locally in your browser
+            </p>
+        </div>
+    </div>
+    
+    <!-- Main App -->
+    <div class="app-container" id="appContainer">
+        <!-- Test Mode Banner -->
+        <div class="test-mode-banner" id="testModeBanner">
+            ⚠️ TEST MODE: Using <span id="ghostCount">0</span> generated ghost submissions
+            <button class="btn btn-sm btn-secondary" onclick="clearTestMode()">Exit Test Mode</button>
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>💕 Valentin Matchmaking Admin</h1>
+            <div class="header-actions">
+                <button class="btn btn-warning" onclick="generateGhosts()">👻 Generate 500 Ghosts</button>
+                <button class="btn btn-secondary" onclick="refreshData()">🔄 Refresh Data</button>
+                <button class="btn btn-secondary" onclick="downloadData()">📥 Download JSON</button>
+                <button class="btn btn-secondary" onclick="exportMatches()">📄 Export Matches</button>
+                <button class="btn btn-primary" onclick="runMatchmaking()">💕 Run Matchmaking</button>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">📝 Total Submissions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statMale">0</div>
+                <div class="stat-label">👨 Male</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statFemale">0</div>
+                <div class="stat-label">👩 Female</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statMatches">0</div>
+                <div class="stat-label">💑 Matches</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statAvgScore">0%</div>
+                <div class="stat-label">💯 Avg Score</div>
+            </div>
+        </div>
+        
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+            <h3 style="margin-bottom: 20px; color: #333;">⚙️ Matching Parameters</h3>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Max Grade Gap</label>
+                    <select id="maxGradeGap">
+                        <option value="0">Same grade only</option>
+                        <option value="1" selected>1 grade apart</option>
+                        <option value="2">2 grades apart</option>
+                        <option value="3">Any grade</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Max Age Gap</label>
+                    <select id="maxAgeGap">
+                        <option value="0">Same age only</option>
+                        <option value="1" selected>1 year apart</option>
+                        <option value="2">2 years apart</option>
+                        <option value="3">Any age</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Qualities Weight</label>
+                    <div class="weight-slider">
+                        <input type="range" id="weightQualities" min="0" max="50" value="30">
+                        <span class="weight-value" id="weightQualitiesVal">30%</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Lifestyle Weight</label>
+                    <div class="weight-slider">
+                        <input type="range" id="weightLifestyle" min="0" max="50" value="25">
+                        <span class="weight-value" id="weightLifestyleVal">25%</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Personality Weight</label>
+                    <div class="weight-slider">
+                        <input type="range" id="weightPersonality" min="0" max="50" value="20">
+                        <span class="weight-value" id="weightPersonalityVal">20%</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Preferences Weight</label>
+                    <div class="weight-slider">
+                        <input type="range" id="weightPreferences" min="0" max="50" value="15">
+                        <span class="weight-value" id="weightPreferencesVal">15%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Panels -->
+        <div class="panels">
+            <!-- Submissions Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>📋 Submissions</h2>
+                    <span id="submissionCount">0 people</span>
+                </div>
+                <div class="panel-body" id="submissionsPanel">
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>No submissions loaded yet</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Matches Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>💑 Matches</h2>
+                    <span id="matchCount">0 pairs</span>
+                </div>
+                <div class="panel-body" id="matchesPanel">
+                    <div class="empty-state">
+                        <div class="icon">💔</div>
+                        <p>No matches calculated yet</p>
+                        <p style="font-size: 0.85rem; margin-top: 10px;">Click "Run Matchmaking" to generate pairs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Log Console -->
+        <div class="panel" style="margin-top: 25px;">
+            <div class="panel-header">
+                <h2>📟 Algorithm Log</h2>
+                <button class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;" onclick="clearLog()">Clear</button>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+                <div class="log-console" id="logConsole">
+                    <div class="log-entry info">[System] Ready. Load data to begin.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingText">Loading...</p>
+        </div>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <h3 id="confirmTitle">Confirm Action</h3>
+            <p id="confirmMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirmBtn" onclick="confirmAction()">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // FIREBASE CONFIG
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVFYEp5ILQoL05nb0Y0dkilIHj6cEnbq8",
+            authDomain: "valentin-82f87.firebaseapp.com",
+            databaseURL: "https://valentin-82f87-default-rtdb.firebaseio.com",
+            projectId: "valentin-82f87",
+            storageBucket: "valentin-82f87.firebasestorage.app",
+            messagingSenderId: "1078170330098",
+            appId: "1:1078170330098:web:9be952415c9558eaf6816b"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        // ============================================
+        // STATE
+        // ============================================
+        let submissions = [];
+        let matches = [];
+        let isAuthenticated = false;
+        let isTestMode = false;
+        let pendingConfirmAction = null;
+        
+        // ============================================
+        // AUTH
+        // ============================================
+        function loginViaPortal() {
+            // Open portal in popup
+            const popup = window.open('/portal/', 'portal', 'width=500,height=600');
+            
+            // Check for auth periodically
+            const checkAuth = setInterval(async () => {
+                try {
+                    const resp = await fetch('/portal/api/verify', { credentials: 'include' });
+                    if (resp.ok) {
+                        clearInterval(checkAuth);
+                        if (popup) popup.close();
+                        onAuthenticated();
+                    }
+                } catch (e) {}
+            }, 1000);
+            
+            // Stop checking after 2 minutes
+            setTimeout(() => clearInterval(checkAuth), 120000);
+        }
+        
+        async function checkExistingAuth() {
+            try {
+                const resp = await fetch('/portal/api/verify', { credentials: 'include' });
+                if (resp.ok) {
+                    onAuthenticated();
+                    return true;
+                }
+            } catch (e) {}
+            return false;
+        }
+        
+        function onAuthenticated() {
+            isAuthenticated = true;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').classList.add('active');
+            log('Authenticated successfully', 'success');
+            refreshData();
+        }
+        
+        // ============================================
+        // DATA LOADING
+        // ============================================
+        async function refreshData() {
+            showLoading('Loading submissions...');
+            log('Fetching submissions from API...', 'info');
+            
+            try {
+                const resp = await fetch('/sites/valentin/api/submissions', {
+                    credentials: 'same-origin'
+                });
+                
+                if (!resp.ok) {
+                    throw new Error('Failed to load submissions - error ' + resp.status);
+                }
+                
+                const data = await resp.json();
+                
+                if (!data.submissions || data.submissions.length === 0) {
+                    submissions = [];
+                    log('No submissions found in database', 'warning');
+                } else {
+                    submissions = data.submissions.map(sub => ({
+                        id: sub.id || sub.email,
+                        ...sub
+                    }));
+                    log(`Loaded ${submissions.length} submissions`, 'success');
+                }
+                
+                updateStats();
+                renderSubmissions();
+                hideLoading();
+                showToast(`Loaded ${submissions.length} submissions`, 'success');
+                
+            } catch (error) {
+                log(`Error loading data: ${error.message}`, 'error');
+                hideLoading();
+                showToast('Failed to load data', 'error');
+            }
+        }
+        
+        function updateStats() {
+            const males = submissions.filter(s => s.gender === 'Male').length;
+            const females = submissions.filter(s => s.gender === 'Female').length;
+            
+            document.getElementById('statTotal').textContent = submissions.length;
+            document.getElementById('statMale').textContent = males;
+            document.getElementById('statFemale').textContent = females;
+            document.getElementById('statMatches').textContent = matches.length;
+            
+            if (matches.length > 0) {
+                const avg = matches.reduce((sum, m) => sum + m.score, 0) / matches.length;
+                document.getElementById('statAvgScore').textContent = Math.round(avg) + '%';
+            } else {
+                document.getElementById('statAvgScore').textContent = '0%';
+            }
+        }
+        
+        function renderSubmissions() {
+            const panel = document.getElementById('submissionsPanel');
+            document.getElementById('submissionCount').textContent = `${submissions.length} people`;
+            
+            if (submissions.length === 0) {
+                panel.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No submissions yet</p></div>`;
+                return;
+            }
+            
+            let html = `<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Gender</th>
+                        <th>Seeks</th>
+                        <th>Grade</th>
+                        <th>Age</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
+            submissions.forEach((sub, idx) => {
+                const isGhost = sub.email && sub.email.includes('@ghost.test');
+                html += `<tr${isGhost ? ' style="opacity: 0.7; background: #fffbeb;"' : ''}>
+                    <td class="email-badge">${sub.email || 'N/A'}${isGhost ? ' 👻' : ''}</td>
+                    <td>${sub.gender || '?'}</td>
+                    <td>${sub.gender_pref || '?'}</td>
+                    <td>${sub.grade || '?'}</td>
+                    <td>${sub.age || '?'}</td>
+                    <td><button class="delete-btn" onclick="confirmDelete('${sub.id}', '${sub.email || 'Unknown'}')" title="Delete">🗑️</button></td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            panel.innerHTML = html;
+        }
+        
+        // ============================================
+        // MATCHMAKING ALGORITHM
+        // ============================================
+        function getParams() {
+            return {
+                maxGradeGap: parseInt(document.getElementById('maxGradeGap').value),
+                maxAgeGap: parseInt(document.getElementById('maxAgeGap').value),
+                weights: {
+                    qualities: parseInt(document.getElementById('weightQualities').value),
+                    lifestyle: parseInt(document.getElementById('weightLifestyle').value),
+                    personality: parseInt(document.getElementById('weightPersonality').value),
+                    preferences: parseInt(document.getElementById('weightPreferences').value)
+                }
+            };
+        }
+        
+        function matchesGenderPreference(seekerPref, targetGender) {
+            if (seekerPref === 'Everyone') return true;
+            if (seekerPref === 'Men' && targetGender === 'Male') return true;
+            if (seekerPref === 'Women' && targetGender === 'Female') return true;
+            return false;
+        }
+        
+        function isEligible(a, b, params) {
+            // Can't match with self
+            if (a.id === b.id) return false;
+            
+            // Gender preference check (bidirectional)
+            if (!matchesGenderPreference(a.gender_pref, b.gender)) return false;
+            if (!matchesGenderPreference(b.gender_pref, a.gender)) return false;
+            
+            // Grade gap check
+            const gradeGap = Math.abs((a.grade || 10) - (b.grade || 10));
+            if (params.maxGradeGap < 3 && gradeGap > params.maxGradeGap) return false;
+            
+            // Age gap check
+            const ageGap = Math.abs((a.age || 16) - (b.age || 16));
+            if (params.maxAgeGap < 3 && ageGap > params.maxAgeGap) return false;
+            
+            return true;
+        }
+        
+        function calculateQualitiesScore(a, b) {
+            // What A wants, B should HAVE
+            const aWants = a.qualities_want || [];
+            const bHas = b.qualities_have || [];
+            const bWants = b.qualities_want || [];
+            const aHas = a.qualities_have || [];
+            
+            // Calculate overlap
+            const aGetsFromB = aWants.filter(q => bHas.includes(q)).length;
+            const bGetsFromA = bWants.filter(q => aHas.includes(q)).length;
+            
+            // Max possible: 3+3 = 6
+            return ((aGetsFromB + bGetsFromA) / 6) * 100;
+        }
+        
+        function calculateLifestyleScore(a, b) {
+            let score = 0;
+            let maxScore = 0;
+            
+            // Categorical matches
+            const categories = ['love_language', 'music_genre', 'favorite_subject', 
+                               'favorite_season', 'ice_cream', 'city_or_country'];
+            
+            categories.forEach(q => {
+                maxScore += 10;
+                if (a[q] && b[q] && a[q] === b[q]) score += 10;
+            });
+            
+            // Binary matches
+            const binaries = ['text_or_call', 'home_or_out'];
+            binaries.forEach(q => {
+                maxScore += 15;
+                if (a[q] && b[q] && a[q] === b[q]) score += 15;
+            });
+            
+            return maxScore > 0 ? (score / maxScore) * 100 : 50;
+        }
+        
+        function calculatePersonalityScore(a, b) {
+            let totalScore = 0;
+            let count = 0;
+            
+            // Extrovert scale (0-100): similar is good
+            if (a.extrovert_scale !== undefined && b.extrovert_scale !== undefined) {
+                const diff = Math.abs(a.extrovert_scale - b.extrovert_scale);
+                totalScore += Math.max(0, 100 - diff);
+                count++;
+            }
+            
+            // Social battery (1-5): similar is good
+            if (a.social_battery && b.social_battery) {
+                const diff = Math.abs(a.social_battery - b.social_battery);
+                totalScore += Math.max(0, 100 - diff * 20);
+                count++;
+            }
+            
+            // Sleep time: similar is good (hours, 0-24)
+            if (a.sleep_time && b.sleep_time) {
+                const diff = Math.abs(a.sleep_time - b.sleep_time);
+                totalScore += Math.max(0, 100 - diff * 10);
+                count++;
+            }
+            
+            return count > 0 ? totalScore / count : 50;
+        }
+        
+        function calculatePreferencesScore(a, b) {
+            let score = 0;
+            let count = 0;
+            
+            // Date ideas ranking correlation (Spearman's rho)
+            if (a.date_ideas && b.date_ideas && Array.isArray(a.date_ideas) && Array.isArray(b.date_ideas)) {
+                const n = Math.min(a.date_ideas.length, b.date_ideas.length);
+                if (n > 1) {
+                    let d2Sum = 0;
+                    a.date_ideas.forEach((item, rankA) => {
+                        const rankB = b.date_ideas.indexOf(item);
+                        if (rankB !== -1) {
+                            const d = rankA - rankB;
+                            d2Sum += d * d;
+                        }
+                    });
+                    const rho = 1 - (6 * d2Sum) / (n * (n * n - 1));
+                    score += (rho + 1) * 50; // Convert [-1, 1] to [0, 100]
+                    count++;
+                }
+            }
+            
+            // Color similarity (HSL distance)
+            if (a.favorite_color && b.favorite_color) {
+                // Simple hex comparison - could be improved with HSL
+                if (a.favorite_color === b.favorite_color) {
+                    score += 100;
+                } else {
+                    score += 30; // Some base score for having a color
+                }
+                count++;
+            }
+            
+            return count > 0 ? score / count : 50;
+        }
+        
+        function calculateCompatibility(a, b, weights) {
+            const qualitiesScore = calculateQualitiesScore(a, b);
+            const lifestyleScore = calculateLifestyleScore(a, b);
+            const personalityScore = calculatePersonalityScore(a, b);
+            const preferencesScore = calculatePreferencesScore(a, b);
+            
+            const totalWeight = weights.qualities + weights.lifestyle + 
+                               weights.personality + weights.preferences;
+            
+            if (totalWeight === 0) return 50;
+            
+            const weightedScore = (
+                qualitiesScore * weights.qualities +
+                lifestyleScore * weights.lifestyle +
+                personalityScore * weights.personality +
+                preferencesScore * weights.preferences
+            ) / totalWeight;
+            
+            return {
+                total: Math.round(weightedScore),
+                breakdown: {
+                    qualities: Math.round(qualitiesScore),
+                    lifestyle: Math.round(lifestyleScore),
+                    personality: Math.round(personalityScore),
+                    preferences: Math.round(preferencesScore)
+                }
+            };
+        }
+        
+        // Hungarian Algorithm for optimal matching
+        function hungarianAlgorithm(costMatrix) {
+            const n = costMatrix.length;
+            if (n === 0) return [];
+            
+            const INF = 1e9;
+            const u = new Array(n + 1).fill(0);
+            const v = new Array(n + 1).fill(0);
+            const p = new Array(n + 1).fill(0);
+            const way = new Array(n + 1).fill(0);
+            
+            for (let i = 1; i <= n; i++) {
+                p[0] = i;
+                let j0 = 0;
+                const minv = new Array(n + 1).fill(INF);
+                const used = new Array(n + 1).fill(false);
+                
+                do {
+                    used[j0] = true;
+                    const i0 = p[j0];
+                    let delta = INF;
+                    let j1 = 0;
+                    
+                    for (let j = 1; j <= n; j++) {
+                        if (!used[j]) {
+                            const cost = i0 <= n && j <= n ? (costMatrix[i0 - 1][j - 1] || INF) : INF;
+                            const cur = cost - u[i0] - v[j];
+                            if (cur < minv[j]) {
+                                minv[j] = cur;
+                                way[j] = j0;
+                            }
+                            if (minv[j] < delta) {
+                                delta = minv[j];
+                                j1 = j;
+                            }
+                        }
+                    }
+                    
+                    for (let j = 0; j <= n; j++) {
+                        if (used[j]) {
+                            u[p[j]] += delta;
+                            v[j] -= delta;
+                        } else {
+                            minv[j] -= delta;
+                        }
+                    }
+                    
+                    j0 = j1;
+                } while (p[j0] !== 0);
+                
+                do {
+                    const j1 = way[j0];
+                    p[j0] = p[j1];
+                    j0 = j1;
+                } while (j0);
+            }
+            
+            const result = [];
+            for (let j = 1; j <= n; j++) {
+                if (p[j] !== 0 && p[j] <= n) {
+                    result.push([p[j] - 1, j - 1]);
+                }
+            }
+            return result;
+        }
+        
+        function runMatchmaking() {
+            const params = getParams();
+            log('Starting matchmaking algorithm...', 'info');
+            log(`Parameters: Grade gap ≤${params.maxGradeGap}, Age gap ≤${params.maxAgeGap}`, 'info');
+            
+            if (submissions.length < 2) {
+                log('Not enough submissions to create matches', 'error');
+                showToast('Need at least 2 submissions', 'error');
+                return;
+            }
+            
+            showLoading('Running matchmaking algorithm...');
+            
+            // Use setTimeout to allow UI to update
+            setTimeout(() => {
+                try {
+                    // Build eligibility and compatibility matrix
+                    const n = submissions.length;
+                    const compatMatrix = [];
+                    const compatDetails = {};
+                    
+                    log(`Building ${n}x${n} compatibility matrix...`, 'info');
+                    
+                    for (let i = 0; i < n; i++) {
+                        compatMatrix[i] = [];
+                        for (let j = 0; j < n; j++) {
+                            if (i === j) {
+                                compatMatrix[i][j] = 1000; // Can't match self
+                            } else if (!isEligible(submissions[i], submissions[j], params)) {
+                                compatMatrix[i][j] = 1000; // Not eligible
+                            } else {
+                                const compat = calculateCompatibility(
+                                    submissions[i], 
+                                    submissions[j], 
+                                    params.weights
+                                );
+                                // Convert to cost (higher compatibility = lower cost)
+                                compatMatrix[i][j] = 100 - compat.total;
+                                compatDetails[`${i}-${j}`] = compat;
+                            }
+                        }
+                    }
+                    
+                    log('Running Hungarian algorithm for optimal pairing...', 'info');
+                    
+                    // Run Hungarian algorithm
+                    const assignments = hungarianAlgorithm(compatMatrix);
+                    
+                    // Convert assignments to matches (avoiding duplicates)
+                    matches = [];
+                    const used = new Set();
+                    
+                    assignments.forEach(([i, j]) => {
+                        if (!used.has(i) && !used.has(j) && compatMatrix[i][j] < 1000) {
+                            const key = `${i}-${j}`;
+                            const keyReverse = `${j}-${i}`;
+                            const details = compatDetails[key] || compatDetails[keyReverse];
+                            
+                            if (details) {
+                                matches.push({
+                                    person1: submissions[i],
+                                    person2: submissions[j],
+                                    score: details.total,
+                                    breakdown: details.breakdown
+                                });
+                                used.add(i);
+                                used.add(j);
+                            }
+                        }
+                    });
+                    
+                    // Sort by score descending
+                    matches.sort((a, b) => b.score - a.score);
+                    
+                    log(`Created ${matches.length} matches`, 'success');
+                    
+                    if (matches.length > 0) {
+                        const avgScore = matches.reduce((s, m) => s + m.score, 0) / matches.length;
+                        log(`Average compatibility: ${Math.round(avgScore)}%`, 'success');
+                    }
+                    
+                    const unmatched = n - (matches.length * 2);
+                    if (unmatched > 0) {
+                        log(`${unmatched} people could not be matched (eligibility constraints)`, 'warning');
+                    }
+                    
+                    updateStats();
+                    renderMatches();
+                    hideLoading();
+                    showToast(`Created ${matches.length} matches!`, 'success');
+                    
+                } catch (error) {
+                    log(`Error: ${error.message}`, 'error');
+                    hideLoading();
+                    showToast('Matchmaking failed', 'error');
+                }
+            }, 100);
+        }
+        
+        function renderMatches() {
+            const panel = document.getElementById('matchesPanel');
+            document.getElementById('matchCount').textContent = `${matches.length} pairs`;
+            
+            if (matches.length === 0) {
+                panel.innerHTML = `<div class="empty-state">
+                    <div class="icon">💔</div>
+                    <p>No matches created</p>
+                </div>`;
+                return;
+            }
+            
+            let html = '';
+            matches.forEach((match, idx) => {
+                html += `
+                    <div class="match-card" onclick="this.classList.toggle('expanded')">
+                        <div class="match-header">
+                            <div class="match-number">${idx + 1}</div>
+                            <div class="match-score">${match.score}%</div>
+                        </div>
+                        <div class="match-people">
+                            <div class="match-person">
+                                <div class="email">${match.person1.email || 'Unknown'}</div>
+                                <div class="details">${match.person1.gender || '?'} • Grade ${match.person1.grade || '?'} • Age ${match.person1.age || '?'}</div>
+                            </div>
+                            <div class="match-heart">💕</div>
+                            <div class="match-person">
+                                <div class="email">${match.person2.email || 'Unknown'}</div>
+                                <div class="details">${match.person2.gender || '?'} • Grade ${match.person2.grade || '?'} • Age ${match.person2.age || '?'}</div>
+                            </div>
+                        </div>
+                        <div class="match-breakdown">
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">✨ Qualities Match</span>
+                                <span class="breakdown-value">${match.breakdown?.qualities || 0}%</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">🎵 Lifestyle</span>
+                                <span class="breakdown-value">${match.breakdown?.lifestyle || 0}%</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">🎭 Personality</span>
+                                <span class="breakdown-value">${match.breakdown?.personality || 0}%</span>
+                            </div>
+                            <div class="breakdown-row">
+                                <span class="breakdown-label">💑 Preferences</span>
+                                <span class="breakdown-value">${match.breakdown?.preferences || 0}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            panel.innerHTML = html;
+        }
+        
+        // ============================================
+        // EXPORT FUNCTIONS
+        // ============================================
+        function downloadData() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                submissionCount: submissions.length,
+                submissions: submissions
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `valentin-submissions-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            log('Downloaded submissions JSON', 'success');
+            showToast('Downloaded submissions', 'success');
+        }
+        
+        function exportMatches() {
+            if (matches.length === 0) {
+                showToast('No matches to export', 'error');
+                return;
+            }
+            
+            // Create CSV
+            let csv = 'Match #,Person 1 Email,Person 1 Grade,Person 1 Age,Person 2 Email,Person 2 Grade,Person 2 Age,Compatibility Score,Qualities,Lifestyle,Personality,Preferences\n';
+            
+            matches.forEach((match, idx) => {
+                csv += `${idx + 1},${match.person1.email},${match.person1.grade},${match.person1.age},${match.person2.email},${match.person2.grade},${match.person2.age},${match.score}%,${match.breakdown?.qualities || 0}%,${match.breakdown?.lifestyle || 0}%,${match.breakdown?.personality || 0}%,${match.breakdown?.preferences || 0}%\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `valentin-matches-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            log('Exported matches to CSV', 'success');
+            showToast('Exported matches', 'success');
+        }
+        
+        // ============================================
+        // DELETE FUNCTIONALITY
+        // ============================================
+        function confirmDelete(id, email) {
+            document.getElementById('confirmTitle').textContent = 'Delete Submission';
+            document.getElementById('confirmMessage').textContent = `Are you sure you want to delete the submission from "${email}"? This cannot be undone.`;
+            document.getElementById('confirmBtn').textContent = 'Delete';
+            document.getElementById('confirmModal').classList.add('active');
+            pendingConfirmAction = () => deleteSubmission(id, email);
+        }
+        
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingConfirmAction = null;
+        }
+        
+        function confirmAction() {
+            if (pendingConfirmAction) {
+                pendingConfirmAction();
+            }
+            closeConfirmModal();
+        }
+        
+        async function deleteSubmission(id, email) {
+            if (isTestMode) {
+                // Just remove from local array in test mode
+                submissions = submissions.filter(s => s.id !== id);
+                log(`Deleted ghost: ${email}`, 'success');
+                updateStats();
+                renderSubmissions();
+                showToast('Ghost deleted', 'success');
+                document.getElementById('ghostCount').textContent = submissions.length;
+                return;
+            }
+            
+            try {
+                await db.ref(`submissions/${id}`).remove();
+                log(`Deleted submission: ${email}`, 'success');
+                submissions = submissions.filter(s => s.id !== id);
+                updateStats();
+                renderSubmissions();
+                showToast('Submission deleted', 'success');
+            } catch (error) {
+                log(`Error deleting: ${error.message}`, 'error');
+                showToast('Failed to delete', 'error');
+            }
+        }
+        
+        async function deleteAllGhosts() {
+            const ghosts = submissions.filter(s => s.email && s.email.includes('@ghost.test'));
+            if (ghosts.length === 0) {
+                showToast('No ghosts to delete', 'warning');
+                return;
+            }
+            
+            showLoading(`Deleting ${ghosts.length} ghosts...`);
+            log(`Deleting ${ghosts.length} ghost submissions...`, 'info');
+            
+            try {
+                for (const ghost of ghosts) {
+                    await db.ref(`submissions/${ghost.id}`).remove();
+                }
+                log(`Deleted all ${ghosts.length} ghosts`, 'success');
+                await refreshData();
+                showToast(`Deleted ${ghosts.length} ghosts`, 'success');
+            } catch (error) {
+                log(`Error deleting ghosts: ${error.message}`, 'error');
+                hideLoading();
+                showToast('Failed to delete ghosts', 'error');
+            }
+        }
+        
+        // ============================================
+        // GHOST GENERATION (TEST MODE)
+        // ============================================
+        const FIRST_NAMES_M = ['James', 'John', 'Michael', 'David', 'Daniel', 'Matthew', 'Andrew', 'Joshua', 'Ethan', 'Ryan', 'Lucas', 'Mason', 'Logan', 'Alexander', 'Sebastian', 'Diego', 'Carlos', 'Miguel', 'Luis', 'Adrian'];
+        const FIRST_NAMES_F = ['Emma', 'Olivia', 'Sophia', 'Isabella', 'Mia', 'Charlotte', 'Amelia', 'Harper', 'Evelyn', 'Abigail', 'Luna', 'Camila', 'Valentina', 'Sofia', 'Victoria', 'Elena', 'Natalia', 'Andrea', 'Maria', 'Ana'];
+        const LAST_NAMES = ['Smith', 'Johnson', 'Garcia', 'Martinez', 'Rodriguez', 'Lopez', 'Hernandez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White', 'Harris'];
+        
+        const QUALITIES = ['Intelligence', 'Humor', 'Kindness', 'Confidence', 'Ambition'];
+        const LOVE_LANGUAGES = ['Words of Affirmation', 'Quality Time', 'Physical Touch', 'Acts of Service', 'Gifts'];
+        const MUSIC_GENRES = ['Pop', 'Hip Hop', 'Rock', 'R&B', 'EDM', 'Latin', 'Indie', 'K-Pop'];
+        const SUBJECTS = ['Math', 'Science', 'English', 'History', 'Art', 'Music', 'PE', 'Computer Science'];
+        const SEASONS = ['Spring', 'Summer', 'Fall', 'Winter'];
+        const ICE_CREAMS = ['Vanilla', 'Chocolate', 'Strawberry', 'Mint Chip', 'Cookie Dough'];
+        const DATE_IDEAS = ['🎬 Movie Night', '🍽️ Nice Dinner', '🌳 Park Walk', '🎮 Gaming', '☕ Coffee Date'];
+        
+        function pickRandom(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+        
+        function pickMultiple(arr, count) {
+            const shuffled = [...arr].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
+        }
+        
+        function shuffleArray(arr) {
+            return [...arr].sort(() => Math.random() - 0.5);
+        }
+        
+        function generateGhost(index) {
+            const isMale = Math.random() > 0.5;
+            const firstName = pickRandom(isMale ? FIRST_NAMES_M : FIRST_NAMES_F);
+            const lastName = pickRandom(LAST_NAMES);
+            const grade = 9 + Math.floor(Math.random() * 4); // 9-12
+            const age = grade + 5 + (Math.random() > 0.7 ? 1 : 0); // Grade + 5, sometimes +6
+            
+            // Gender preference distribution: 85% opposite, 10% same, 5% everyone
+            let genderPref;
+            const prefRoll = Math.random();
+            if (prefRoll < 0.85) {
+                genderPref = isMale ? 'Women' : 'Men';
+            } else if (prefRoll < 0.95) {
+                genderPref = isMale ? 'Men' : 'Women';
+            } else {
+                genderPref = 'Everyone';
+            }
+            
+            return {
+                id: `ghost_${index}_${Date.now()}`,
+                email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${index}@ghost.test`,
+                name: `${firstName} ${lastName}`,
+                gender: isMale ? 'Male' : 'Female',
+                gender_pref: genderPref,
+                grade: grade,
+                age: age,
+                extrovert_scale: Math.floor(Math.random() * 100),
+                love_language: pickRandom(LOVE_LANGUAGES),
+                qualities_want: pickMultiple(QUALITIES, 3),
+                qualities_have: pickMultiple(QUALITIES, 3),
+                text_or_call: Math.random() > 0.5 ? 'Text' : 'Call',
+                home_or_out: Math.random() > 0.5 ? 'Stay Home' : 'Go Out',
+                music_genre: pickRandom(MUSIC_GENRES),
+                favorite_subject: pickRandom(SUBJECTS),
+                sleep_time: 21 + Math.floor(Math.random() * 5), // 9pm - 1am
+                social_battery: 1 + Math.floor(Math.random() * 5), // 1-5
+                favorite_season: pickRandom(SEASONS),
+                ice_cream: pickRandom(ICE_CREAMS),
+                favorite_color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+                city_or_country: Math.random() > 0.5 ? 'City' : 'Countryside',
+                date_ideas: shuffleArray(DATE_IDEAS),
+                dream_location: { lat: (Math.random() * 140) - 70, lng: (Math.random() * 360) - 180, name: 'Random Place' },
+                submittedAt: new Date().toISOString(),
+                isGhost: true
+            };
+        }
+        
+        function generateGhosts() {
+            const count = 500;
+            
+            log(`Generating ${count} ghost submissions for testing...`, 'info');
+            showLoading(`Generating ${count} ghosts...`);
+            
+            setTimeout(() => {
+                isTestMode = true;
+                submissions = [];
+                matches = [];
+                
+                for (let i = 0; i < count; i++) {
+                    submissions.push(generateGhost(i));
+                }
+                
+                // Show test mode banner
+                document.getElementById('testModeBanner').classList.add('active');
+                document.getElementById('ghostCount').textContent = count;
+                
+                log(`Generated ${count} ghosts: ${submissions.filter(s => s.gender === 'Male').length} male, ${submissions.filter(s => s.gender === 'Female').length} female`, 'success');
+                
+                // Log grade distribution
+                const gradeDist = {};
+                submissions.forEach(s => {
+                    gradeDist[s.grade] = (gradeDist[s.grade] || 0) + 1;
+                });
+                log(`Grade distribution: ${Object.entries(gradeDist).map(([g, c]) => `G${g}:${c}`).join(', ')}`, 'info');
+                
+                // Log preference distribution
+                const prefDist = {};
+                submissions.forEach(s => {
+                    const key = `${s.gender}→${s.gender_pref}`;
+                    prefDist[key] = (prefDist[key] || 0) + 1;
+                });
+                log(`Preference distribution: ${Object.entries(prefDist).map(([p, c]) => `${p}:${c}`).join(', ')}`, 'info');
+                
+                updateStats();
+                renderSubmissions();
+                hideLoading();
+                showToast(`Generated ${count} ghosts - TEST MODE ACTIVE`, 'success');
+            }, 100);
+        }
+        
+        function clearTestMode() {
+            isTestMode = false;
+            submissions = [];
+            matches = [];
+            document.getElementById('testModeBanner').classList.remove('active');
+            log('Exited test mode, returning to real data', 'info');
+            refreshData();
+        }
+        
+        // ============================================
+        // UI HELPERS
+        // ============================================
+        function log(message, type = 'info') {
+            const console = document.getElementById('logConsole');
+            const time = new Date().toLocaleTimeString();
+            console.innerHTML += `<div class="log-entry ${type}">[${time}] ${message}</div>`;
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('logConsole').innerHTML = '<div class="log-entry info">[System] Log cleared</div>';
+        }
+        
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // Weight slider updates
+        document.querySelectorAll('.weight-slider input').forEach(input => {
+            input.addEventListener('input', () => {
+                document.getElementById(input.id + 'Val').textContent = input.value + '%';
+            });
+        });
+        
+        // ============================================
+        // INIT
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            checkExistingAuth();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0f0f16;
+            --bg-tertiary: #14141d;
+            --bg-card: #16161f;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --warning: #f59e0b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 8px 0;
+        }
+
+        .ticker {
+            display: flex;
+            animation: ticker 60s linear infinite;
+            white-space: nowrap;
+        }
+
+        .ticker:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes ticker {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 0 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            gap: 8px;
+        }
+
+        .ticker-symbol {
+            font-weight: 600;
+        }
+
+        .ticker-change.positive {
+            color: var(--positive);
+        }
+
+        .ticker-change.negative {
+            color: var(--negative);
+        }
+
+        .ticker-divider {
+            opacity: 0.3;
+        }
+
+        .nav {
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            border-radius: 8px;
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.15);
+        }
+
+        .logo-symbol {
+            font-size: 24px;
+            font-weight: 300;
+            color: white;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .brand-tagline {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 150ms ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .nav-link.active {
+            color: var(--text-primary);
+            background: var(--bg-card);
+        }
+
+        .nav-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--positive);
+            box-shadow: 0 0 8px var(--positive);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-text {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            transition: all 250ms ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .positive {
+            color: var(--positive);
+        }
+
+        .negative {
+            color: var(--negative);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Stock Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker" id="stock-ticker">
+            <div class="ticker-item" style="color: var(--text-tertiary);">Loading market data...</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo">
+                    <span class="logo-symbol">∑</span>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <span class="brand-name">Echo</span>
+                    <span class="brand-tagline">Predictive Analytics</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link active">Dashboard</a>
+                <a href="/predictions" class="nav-link">Predictions</a>
+                <a href="/portfolio" class="nav-link">Portfolio</a>
+                <a href="/backtest" class="nav-link">Backtest</a>
+            </div>
+            <div class="nav-status">
+                <div class="status-dot"></div>
+                <span class="status-text">System Online</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main style="max-width: 1600px; margin: 0 auto; padding: 2rem;">
+        <!-- Stats Grid -->
+        <section style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Portfolio Value -->
+            <div class="card"
+                style="padding: 1.5rem; background: linear-gradient(135deg, var(--bg-card) 0%, rgba(99, 102, 241, 0.1) 100%); border-color: rgba(99, 102, 241, 0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <span
+                        style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">Portfolio
+                        Value</span>
+                    <span
+                        style="padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--positive); background: rgba(16, 185, 129, 0.15);"
+                        id="portfolio-change">+0.0%</span>
+                </div>
+                <div style="font-size: 28px; font-weight: 600; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px;"
+                    id="portfolio-value">$0.00</div>
+            </div>
+
+            <!-- Predictions Today -->
+            <div class="card" style="padding: 1.5rem;">
+                <div
+                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 1rem;">
+                    <span style="color: var(--accent-primary); font-size: 18px;">∫</span>
+                </div>
+                <div
+                    style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">
+                    Predictions Today</div>
+                <div style="font-size: 28px; font-weight: 600; font-family: 'JetBrains Mono', monospace;"
+                    id="predictions-count">0</div>
+            </div>
+
+            <!-- Win Rate -->
+            <div class="card" style="padding: 1.5rem;">
+                <div
+                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 1rem;">
+                    <span style="color: var(--accent-primary); font-size: 18px;">φ</span>
+                </div>
+                <div
+                    style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">
+                    Win Rate</div>
+                <div style="font-size: 28px; font-weight: 600; font-family: 'JetBrains Mono', monospace;" id="win-rate">
+                    --%</div>
+            </div>
+
+            <!-- Total P&L -->
+            <div class="card" style="padding: 1.5rem;">
+                <div
+                    style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); border-radius: 8px; margin-bottom: 1rem;">
+                    <span style="color: var(--positive); font-size: 18px;">Δ</span>
+                </div>
+                <div
+                    style="font-size: 12px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px;">
+                    Total P&L</div>
+                <div style="font-size: 28px; font-weight: 600; font-family: 'JetBrains Mono', monospace;"
+                    id="total-pnl">$0.00</div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Grid -->
+        <section style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+            <!-- Chart Panel -->
+            <div class="card" style="grid-row: span 2;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+                    <h2 style="font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 18px; font-weight: 300; color: var(--accent-primary); font-family: serif;">π</span>
+                        Portfolio Performance
+                    </h2>
+                    <div
+                        style="display: flex; gap: 4px; background: var(--bg-secondary); padding: 4px; border-radius: 8px;">
+                        <button class="chart-range active" data-range="1W"
+                            style="padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--text-primary); background: var(--bg-card); border: none; border-radius: 4px; cursor: pointer;">1W</button>
+                        <button class="chart-range" data-range="1M"
+                            style="padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); background: transparent; border: none; border-radius: 4px; cursor: pointer;">1M</button>
+                        <button class="chart-range" data-range="3M"
+                            style="padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); background: transparent; border: none; border-radius: 4px; cursor: pointer;">3M</button>
+                        <button class="chart-range" data-range="ALL"
+                            style="padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--text-tertiary); background: transparent; border: none; border-radius: 4px; cursor: pointer;">ALL</button>
+                    </div>
+                </div>
+                <div style="padding: 1.5rem; height: 350px;">
+                    <canvas id="main-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Quick Prediction Panel -->
+            <div class="card">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+                    <h2 style="font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 18px; font-weight: 300; color: var(--accent-primary); font-family: serif;">∑</span>
+                        Generate Prediction
+                    </h2>
+                </div>
+                <form id="prediction-form" style="padding: 1.5rem;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Symbol</label>
+                        <input type="text" id="symbol-input" placeholder="AAPL" maxlength="5"
+                            style="width: 100%; padding: 12px 16px; font-size: 16px; font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--text-primary); background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; text-transform: uppercase; outline: none;">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label
+                            style="display: block; font-size: 11px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem;">Time
+                            Horizon</label>
+                        <select id="horizon-select"
+                            style="width: 100%; padding: 12px 16px; font-size: 14px; color: var(--text-primary); background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; outline: none;">
+                            <option value="7">7 days</option>
+                            <option value="14">14 days</option>
+                            <option value="30" selected>30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90">90 days</option>
+                        </select>
+                    </div>
+                    <button type="submit"
+                        style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; padding: 14px 24px; font-size: 14px; font-weight: 600; color: white; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5), 0 0 40px rgba(99, 102, 241, 0.15);">
+                        <span>Analyze</span>
+                        <span>→</span>
+                    </button>
+                </form>
+
+                <!-- Prediction Result -->
+                <div id="prediction-result"
+                    style="display: none; padding: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <span style="font-size: 24px; font-weight: 700; font-family: 'JetBrains Mono', monospace;"
+                            id="result-symbol">AAPL</span>
+                        <span id="result-action"
+                            style="padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--positive); background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3);">BUY</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                        <div
+                            style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                            <span
+                                style="display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Confidence</span>
+                            <span style="font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace;"
+                                id="result-confidence">78.3%</span>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                            <span
+                                style="display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Expected
+                                Return</span>
+                            <span
+                                style="font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--positive);"
+                                id="result-return">+12.5%</span>
+                        </div>
+                        <div
+                            style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                            <span
+                                style="display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Target</span>
+                            <span style="font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace;"
+                                id="result-target">$198.40</span>
+                        </div>
+                    </div>
+                    <div id="result-threshold"
+                        style="display: flex; align-items: center; gap: 0.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; font-size: 12px; font-weight: 500; color: var(--positive);">
+                        <span>✓</span> Meets 7% minimum threshold
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Opportunities -->
+            <div class="card">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+                    <h2 style="font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 18px; font-weight: 300; color: var(--accent-primary); font-family: serif;">Ω</span>
+                        Top Opportunities
+                    </h2>
+                    <button onclick="refreshOpportunities()"
+                        style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--bg-secondary); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer; color: var(--text-tertiary);">↻</button>
+                </div>
+                <div id="opportunities-list" style="padding: 1rem;">
+                    <div style="color: var(--text-tertiary); text-align: center; padding: 2rem;">Click refresh to find
+                        opportunities</div>
+                </div>
+            </div>
+
+            <!-- Market Overview -->
+            <div class="card" style="grid-column: span 2;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid var(--border-subtle);">
+                    <h2 style="font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                        <span
+                            style="font-size: 18px; font-weight: 300; color: var(--accent-primary); font-family: serif;">λ</span>
+                        Market Overview
+                    </h2>
+                </div>
+                <div id="market-data"
+                    style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; padding: 1.5rem;">
+                    <div
+                        style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                        <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer
+        style="margin-top: 3rem; padding: 1.5rem 0; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary);">
+        <div
+            style="max-width: 1600px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 18px; color: var(--accent-primary);">∑</span>
+                <span style="font-size: 12px; color: var(--text-tertiary);">Echo Predictive Analytics</span>
+            </div>
+            <span style="font-size: 11px; color: var(--text-muted);">For educational purposes only. Not financial
+                advice.</span>
+            <span id="timestamp"
+                style="font-size: 12px; font-family: 'JetBrains Mono', monospace; color: var(--text-tertiary);"></span>
+        </div>
+    </footer>
+
+    <script>
+        // Demo data for stock ticker
+        const tickerData = [
+            { symbol: 'AAPL', price: 178.52, change: 1.33 },
+            { symbol: 'MSFT', price: 378.91, change: 1.12 },
+            { symbol: 'GOOGL', price: 141.80, change: -0.86 },
+            { symbol: 'AMZN', price: 178.25, change: 1.97 },
+            { symbol: 'NVDA', price: 495.22, change: 2.67 },
+            { symbol: 'META', price: 505.13, change: 1.79 },
+            { symbol: 'TSLA', price: 248.48, change: -2.23 },
+            { symbol: 'JPM', price: 198.42, change: 0.62 }
+        ];
+
+        // Initialize stock ticker
+        function initTicker() {
+            const ticker = document.getElementById('stock-ticker');
+            const items = [...tickerData, ...tickerData]; // Duplicate for seamless loop
+            ticker.innerHTML = items.map(s => `
+                <div class="ticker-item">
+                    <span class="ticker-symbol">${s.symbol}</span>
+                    <span style="color: var(--text-secondary);">$${s.price.toFixed(2)}</span>
+                    <span class="ticker-change ${s.change >= 0 ? 'positive' : 'negative'}" style="padding: 2px 6px; border-radius: 4px; background: ${s.change >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};">
+                        ${s.change >= 0 ? '+' : ''}${s.change.toFixed(2)}%
+                    </span>
+                    <span class="ticker-divider">│</span>
+                </div>
+            `).join('');
+        }
+        initTicker();
+
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            });
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+
+        // Initialize chart
+        function initChart() {
+            const ctx = document.getElementById('main-chart');
+            if (!ctx) return;
+
+            // Generate demo data
+            const data = [];
+            let value = 100000;
+            let benchmark = 100000;
+            for (let i = 90; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                value *= 1 + (Math.random() - 0.48) * 0.02;
+                benchmark *= 1 + (Math.random() - 0.49) * 0.015;
+                data.push({ date: date.toISOString().split('T')[0], portfolio: value, benchmark });
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Portfolio',
+                        data: data.map(d => d.portfolio),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointRadius: 0
+                    }, {
+                        label: 'S&P 500',
+                        data: data.map(d => d.benchmark),
+                        borderColor: '#64748b',
+                        borderDash: [5, 5],
+                        fill: false,
+                        tension: 0.4,
+                        borderWidth: 1.5,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', maxTicksLimit: 8 } },
+                        y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#64748b', callback: v => '$' + (v / 1000).toFixed(0) + 'k' } }
+                    }
+                }
+            });
+
+            // Update stats
+            const finalValue = data[data.length - 1].portfolio;
+            const startValue = data[0].portfolio;
+            const change = ((finalValue - startValue) / startValue * 100);
+            document.getElementById('portfolio-value').textContent = '$' + finalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('portfolio-change').textContent = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
+        }
+        initChart();
+
+        // Fetch market data
+        async function fetchMarketData() {
+            const indices = [
+                { name: 'S&P 500', value: 4782.15, change: 0.82 },
+                { name: 'NASDAQ', value: 16823.45, change: 1.24 },
+                { name: 'DOW JONES', value: 37689.12, change: 0.45 },
+                { name: 'RUSSELL 2000', value: 2012.34, change: -0.32 }
+            ];
+
+            document.getElementById('market-data').innerHTML = indices.map(idx => `
+                <div style="text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">${idx.name}</div>
+                    <div style="font-size: 16px; font-weight: 600; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px;">${idx.value.toLocaleString()}</div>
+                    <div style="font-size: 12px; font-family: 'JetBrains Mono', monospace; color: ${idx.change >= 0 ? 'var(--positive)' : 'var(--negative)'};">
+                        ${idx.change >= 0 ? '+' : ''}${idx.change.toFixed(2)}%
+                    </div>
+                </div>
+            `).join('');
+        }
+        fetchMarketData();
+
+        // Prediction form
+        document.getElementById('prediction-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const symbol = document.getElementById('symbol-input').value.toUpperCase();
+            if (!symbol) return;
+
+            const button = e.target.querySelector('button');
+            const originalHtml = button.innerHTML;
+            button.innerHTML = '<span class="loading" style="display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%;"></span>';
+
+            // Simulate prediction
+            await new Promise(r => setTimeout(r, 1500));
+
+            const confidence = 0.6 + Math.random() * 0.25;
+            const expectedReturn = 5 + Math.random() * 12;
+            const action = confidence > 0.7 && expectedReturn > 7 ? 'buy' : confidence < 0.5 ? 'sell' : 'hold';
+
+            document.getElementById('result-symbol').textContent = symbol;
+            const actionEl = document.getElementById('result-action');
+            actionEl.textContent = action.toUpperCase();
+            actionEl.style.color = action === 'buy' ? 'var(--positive)' : action === 'sell' ? 'var(--negative)' : 'var(--warning)';
+            actionEl.style.background = action === 'buy' ? 'rgba(16, 185, 129, 0.15)' : action === 'sell' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+            actionEl.style.borderColor = action === 'buy' ? 'rgba(16, 185, 129, 0.3)' : action === 'sell' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(245, 158, 11, 0.3)';
+
+            document.getElementById('result-confidence').textContent = (confidence * 100).toFixed(1) + '%';
+            document.getElementById('result-return').textContent = '+' + expectedReturn.toFixed(1) + '%';
+            document.getElementById('result-target').textContent = '$' + (100 + Math.random() * 400).toFixed(2);
+
+            const thresholdEl = document.getElementById('result-threshold');
+            if (expectedReturn >= 7) {
+                thresholdEl.innerHTML = '<span>✓</span> Meets 7% minimum threshold';
+                thresholdEl.style.color = 'var(--positive)';
+                thresholdEl.style.background = 'rgba(16, 185, 129, 0.15)';
+            } else {
+                thresholdEl.innerHTML = '<span>✗</span> Below 7% minimum threshold';
+                thresholdEl.style.color = 'var(--warning)';
+                thresholdEl.style.background = 'rgba(245, 158, 11, 0.15)';
+            }
+
+            document.getElementById('prediction-result').style.display = 'block';
+            button.innerHTML = originalHtml;
+        });
+
+        // Refresh opportunities
+        async function refreshOpportunities() {
+            const container = document.getElementById('opportunities-list');
+            container.innerHTML = '<div style="text-align: center; padding: 2rem;"><span class="loading" style="display: inline-block; width: 24px; height: 24px; border: 2px solid var(--accent-primary); border-top-color: transparent; border-radius: 50%;"></span></div>';
+
+            await new Promise(r => setTimeout(r, 1000));
+
+            const opportunities = [
+                { symbol: 'NVDA', confidence: 82, return: 14.2 },
+                { symbol: 'AMD', confidence: 78, return: 11.5 },
+                { symbol: 'MSFT', confidence: 75, return: 9.8 },
+                { symbol: 'GOOGL', confidence: 71, return: 8.4 },
+                { symbol: 'AMZN', confidence: 68, return: 7.9 }
+            ];
+
+            container.innerHTML = opportunities.map((opp, i) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 8px; cursor: pointer; transition: background 150ms;" onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='transparent'" onclick="document.getElementById('symbol-input').value='${opp.symbol}';document.getElementById('prediction-form').dispatchEvent(new Event('submit'));">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: var(--bg-tertiary); border-radius: 4px; font-size: 11px; font-weight: 600; color: var(--text-tertiary);">${i + 1}</span>
+                        <div>
+                            <div style="font-weight: 600; font-family: 'JetBrains Mono', monospace;">${opp.symbol}</div>
+                            <div style="font-size: 11px; color: var(--text-muted);">${opp.confidence}% confidence</div>
+                        </div>
+                    </div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: var(--positive);">+${opp.return.toFixed(1)}%</div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize with some default values
+        document.getElementById('predictions-count').textContent = '24';
+        document.getElementById('win-rate').textContent = '73.2%';
+        document.getElementById('total-pnl').textContent = '+$14,112';
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LineHook</title>
+    <meta name="description"
+        content="Generate live code statistics, badges, and graphs for any project. One command. All the stats. Anywhere you need them.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nagusamecs.github.io/lineHook/">
+    <meta property="og:title" content="LineHook">
+    <meta property="og:description"
+        content="Generate live code statistics, badges, and graphs for any project. One command. All the stats. Anywhere you need them.">
+    <meta property="og:image" content="https://nagusamecs.github.io/lineHook/banner.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://nagusamecs.github.io/lineHook/">
+    <meta property="twitter:title" content="LineHook - Dynamic Code Statistics">
+    <meta property="twitter:description"
+        content="Generate live code statistics, badges, and graphs for any project. One command. All the stats. Anywhere you need them.">
+    <meta property="twitter:image" content="https://nagusamecs.github.io/lineHook/banner.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="logo-section">
+                    <pre class="ascii-logo">
+╦   ╦ ╔╗╔ ╔═╗ ╦ ╦ ╔═╗ ╔═╗ ╦╔═
+║   ║ ║║║ ║╣  ╠═╣ ║ ║ ║ ║ ╠╩╗
+╩═╝ ╩ ╝╚╝ ╚═╝ ╩ ╩ ╚═╝ ╚═╝ ╩ ╩</pre>
+                </div>
+                <h1>Dynamic Code Statistics</h1>
+                <p class="tagline">Whats a line without a hook?</p>
+
+                <!-- Live Stats for This Project -->
+                <div class="live-stats">
+                    <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/lines.svg"
+                        alt="Lines of Code" class="badge">
+                    <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/files.svg"
+                        alt="Files" class="badge">
+                    <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/code.svg"
+                        alt="Code Lines" class="badge">
+                </div>
+
+                <div class="cta-buttons">
+                    <a href="#install" class="btn btn-primary">Get Started</a>
+                    <a href="https://github.com/NagusameCS/lineHook" class="btn btn-secondary">
+                        <svg class="icon" style="fill: white;" viewBox="0 0 16 16" width="16" height="16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Install -->
+    <section id="install" class="section">
+        <div class="container">
+            <h2>Quick Install</h2>
+            <div class="terminal">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                    <span class="terminal-title">Terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">$</span>
+                        <span class="command">npm install -g linehook</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">$</span>
+                        <span class="command">linehook init</span>
+                    </div>
+                    <div class="terminal-output">
+                        <span class="blue bold">LineHook Setup</span>
+                        <span class="dim">==================================================</span>
+
+                        <span class="cyan">How do you want LineHook to work?</span>
+
+                        <span class="cyan">[1] Offline Mode</span> <span class="dim">(Manual Updates)</span>
+                        <span class="dim">- Generate badges locally</span>
+                        <span class="dim">- Commit and push to your repo</span>
+
+                        <span class="cyan">[2] Auto Mode</span> <span class="dim">(GitHub Actions)</span>
+                        <span class="dim">- Badges auto-update on every push</span>
+                        <span class="dim">- Runs on GitHub's servers (free)</span>
+
+                        <span class="green bold">[OK]</span> LineHook initialized successfully!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="section alt-bg">
+        <div class="container">
+            <h2>How It Works</h2>
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-icon">1</div>
+                    <h3>Analyze</h3>
+                    <p>LineHook scans your codebase and counts lines, files, languages, and assets.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook stats</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">2</div>
+                    <h3>Generate</h3>
+                    <p>Create beautiful SVG badges and graphs with 12+ themes.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook badge --save</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-icon">3</div>
+                    <h3>Display</h3>
+                    <p>Add to your README, website, or anywhere that supports images.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span
+                                    class="code">![Lines](https://raw.githubusercontent.com/user/repo/main/.linehook/badges/lines.svg)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Live Example -->
+    <section class="section">
+        <div class="container">
+            <h2>Live Example</h2>
+            <p class="section-subtitle">These stats are from the LineHook repository itself, updated automatically on
+                every push.</p>
+
+            <div class="stats-showcase">
+                <div class="stats-card">
+                    <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/stats-card.svg"
+                        alt="LineHook Stats Card">
+                </div>
+                <div class="stats-badges">
+                    <h3>Individual Badges</h3>
+                    <div class="badge-grid">
+                        <div class="badge-item">
+                            <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/lines.svg"
+                                alt="Lines">
+                            <code>lines.svg</code>
+                        </div>
+                        <div class="badge-item">
+                            <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/code.svg"
+                                alt="Code">
+                            <code>code.svg</code>
+                        </div>
+                        <div class="badge-item">
+                            <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/files.svg"
+                                alt="Files">
+                            <code>files.svg</code>
+                        </div>
+                        <div class="badge-item">
+                            <img src="https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/chars.svg"
+                                alt="Characters">
+                            <code>chars.svg</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Update Modes -->
+    <section class="section alt-bg">
+        <div class="container">
+            <h2>Update Modes</h2>
+            <p class="section-subtitle">Choose how you want your stats to update</p>
+
+            <div class="grid-2">
+                <div class="mode-card">
+                    <h3>Offline Mode</h3>
+                    <span class="mode-tag">Manual Updates</span>
+                    <p>Generate badges locally and commit them to your repo. Perfect for full control.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook init --offline</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook badge --save</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">git add . && git commit -m "Update stats"</span>
+                            </div>
+                        </div>
+                    </div>
+                    <ul class="mode-features">
+                        <li>No server needed</li>
+                        <li>Works forever</li>
+                        <li>Full control</li>
+                    </ul>
+                </div>
+
+                <div class="mode-card featured">
+                    <h3>Auto Mode</h3>
+                    <span class="mode-tag primary">Recommended</span>
+                    <p>GitHub Actions updates your stats on every push. Set it and forget it.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook init --auto</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">git push</span>
+                            </div>
+                            <div class="terminal-output"><span class="green">Stats update automatically!</span></div>
+                        </div>
+                    </div>
+                    <ul class="mode-features">
+                        <li>Fully automatic</li>
+                        <li>Runs on GitHub (free)</li>
+                        <li>Set and forget</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HTML/Website Usage -->
+    <section id="html" class="section">
+        <div class="container">
+            <h2>Website Integration</h2>
+            <p class="section-subtitle">LineHook works anywhere - README, websites, dashboards</p>
+
+            <div class="code-tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="markdown">Markdown</button>
+                    <button class="tab-btn" data-tab="html-code">HTML</button>
+                    <button class="tab-btn" data-tab="html-embed">HTML Embed</button>
+                </div>
+
+                <div class="tab-content active" id="markdown">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                            <span class="terminal-title">README.md</span>
+                        </div>
+                        <div class="terminal-body code-block">
+                            <span class="comment">&lt;!-- In your README.md --&gt;</span>
+                            ![Lines of
+                            Code](https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/lines.svg)
+                            ![Files](https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/files.svg)
+
+                            <span class="comment">&lt;!-- Stats Card --&gt;</span>
+                            ![Stats](https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/stats-card.svg)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="html-code">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                            <span class="terminal-title">index.html</span>
+                        </div>
+                        <div class="terminal-body code-block">
+                            <span class="comment">&lt;!-- Direct image embed --&gt;</span>
+                            &lt;<span class="tag">img</span> <span class="attr">src</span>=<span
+                                class="string">"https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/lines.svg"</span>
+                            <span class="attr">alt</span>=<span class="string">"Lines of Code"</span>&gt;
+                            &lt;<span class="tag">img</span> <span class="attr">src</span>=<span
+                                class="string">"https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/files.svg"</span>
+                            <span class="attr">alt</span>=<span class="string">"Files"</span>&gt;
+
+                            <span class="comment">&lt;!-- With link --&gt;</span>
+                            &lt;<span class="tag">a</span> <span class="attr">href</span>=<span
+                                class="string">"https://github.com/user/repo"</span>&gt;
+                            &lt;<span class="tag">img</span> <span class="attr">src</span>=<span
+                                class="string">"https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/badges/lines.svg"</span>
+                            <span class="attr">alt</span>=<span class="string">"Lines"</span>&gt;
+                            &lt;/<span class="tag">a</span>&gt;
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="html-embed">
+                    <div class="terminal">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                            <span class="terminal-title">embed.html</span>
+                        </div>
+                        <div class="terminal-body code-block">
+                            <span class="comment">&lt;!-- LineHook Widget (auto-sizing) --&gt;</span>
+                            &lt;<span class="tag">div</span> <span class="attr">class</span>=<span
+                                class="string">"linehook-stats"</span>&gt;
+                            &lt;<span class="tag">object</span> <span class="attr">data</span>=<span
+                                class="string">"https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/stats-card.svg"</span>
+                            <span class="attr">type</span>=<span class="string">"image/svg+xml"</span>&gt;&lt;/<span
+                                class="tag">object</span>&gt;
+                            &lt;/<span class="tag">div</span>&gt;
+
+                            <span class="comment">&lt;!-- Inline SVG (best for styling) --&gt;</span>
+                            &lt;<span class="tag">div</span> <span class="attr">id</span>=<span
+                                class="string">"stats-container"</span>&gt;&lt;/<span class="tag">div</span>&gt;
+                            &lt;<span class="tag">script</span>&gt;
+                            fetch('https://raw.githubusercontent.com/NagusameCS/lineHook/main/.linehook/stats-card.svg')
+                            .then(r =&gt; r.text())
+                            .then(svg =&gt; document.getElementById('stats-container').innerHTML = svg);
+                            &lt;/<span class="tag">script</span>&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Webhook Integration -->
+    <section id="webhooks" class="section alt-bg">
+        <div class="container">
+            <h2>Webhook Integration</h2>
+            <p class="section-subtitle">Real-time updates via webhooks for advanced use cases</p>
+
+            <div class="stack-layout">
+                <div class="feature-block">
+                    <h3>Development Server</h3>
+                    <p>Start a local server for real-time badge generation during development.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook webhook --serve</span>
+                            </div>
+                            <div class="terminal-output">
+                                <span class="green">[OK]</span> Server running on http://localhost:3456
+
+                                Endpoints:
+                                GET /stats <span class="dim">JSON stats</span>
+                                GET /badge/lines <span class="dim">Lines badge</span>
+                                GET /graph/summary <span class="dim">Stats card</span>
+                                POST /webhook <span class="dim">GitHub webhook</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-block">
+                    <h3>
+                        <svg class="icon" style="fill: white;" viewBox="0 0 16 16" width="16" height="16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                        GitHub Webhook
+                    </h3>
+                    <p>Configure GitHub to notify your server on every push for truly live stats.</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook webhook --setup</span>
+                            </div>
+                            <div class="terminal-output">
+                                <span class="cyan">Configure in GitHub:</span>
+                                Settings > Webhooks > Add webhook
+
+                                Payload URL: <span class="string">https://your-server.com/webhook</span>
+                                Content type: <span class="string">application/json</span>
+                                Events: <span class="string">Push events</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Themes -->
+    <section class="section">
+        <div class="container">
+            <h2>12+ Beautiful Themes</h2>
+            <p class="section-subtitle">Match your project's style with built-in themes</p>
+
+            <div class="theme-grid">
+                <div class="theme-preview" data-theme="default">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #555 50%, #007ec6 50%);">
+                        <span>default</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="dracula">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #44475a 50%, #bd93f9 50%);">
+                        <span>dracula</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="nord">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #3b4252 50%, #88c0d0 50%);">
+                        <span>nord</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="tokyoNight">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #1a1b26 50%, #7aa2f7 50%);">
+                        <span>tokyoNight</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="catppuccin">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #313244 50%, #cba6f7 50%);">
+                        <span>catppuccin</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="monokai">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #272822 50%, #a6e22e 50%);">
+                        <span>monokai</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="neon">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #0d0d0d 50%, #ff00ff 50%);">
+                        <span>neon</span>
+                    </div>
+                </div>
+                <div class="theme-preview" data-theme="ocean">
+                    <div class="theme-badge" style="background: linear-gradient(90deg, #1b2838 50%, #66ccff 50%);">
+                        <span>ocean</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="terminal" style="max-width: 500px; margin: 2rem auto;">
+                <div class="terminal-header">
+                    <span class="terminal-dot red"></span>
+                    <span class="terminal-dot yellow"></span>
+                    <span class="terminal-dot green"></span>
+                </div>
+                <div class="terminal-body">
+                    <div class="terminal-line">
+                        <span class="prompt">$</span>
+                        <span class="command">linehook badge --theme dracula --save</span>
+                    </div>
+                    <div class="terminal-line">
+                        <span class="prompt">$</span>
+                        <span class="command">linehook graph --theme nord -o stats.svg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- All Commands -->
+    <section id="commands" class="section alt-bg">
+        <div class="container">
+            <h2>Commands Reference</h2>
+
+            <div class="command-grid">
+                <div class="command-card">
+                    <h3><code>linehook stats</code></h3>
+                    <p>Analyze project and display statistics</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook stats --dir ./src</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook stats --output json</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-card">
+                    <h3><code>linehook badge</code></h3>
+                    <p>Generate badge SVGs for your README</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook badge --type all --save</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook badge --theme dracula --svg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-card">
+                    <h3><code>linehook graph</code></h3>
+                    <p>Generate visual charts and cards</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook graph --type summary -o stats.svg</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook graph --type pie -o langs.svg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-card">
+                    <h3><code>linehook init</code></h3>
+                    <p>Initialize LineHook in your project</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook init --auto</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook init --offline</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-card">
+                    <h3><code>linehook webhook</code></h3>
+                    <p>Start webhook server for real-time stats</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook webhook --serve</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook webhook --port 8080</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="command-card">
+                    <h3><code>linehook theme</code></h3>
+                    <p>Preview and manage color themes</p>
+                    <div class="terminal mini">
+                        <div class="terminal-header">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook theme --list</span>
+                            </div>
+                            <div class="terminal-line">
+                                <span class="prompt">$</span>
+                                <span class="command">linehook theme --preview dracula</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3>Will badges break if my computer turns off?</h3>
+                    <p><strong>No!</strong> LineHook generates static SVG files stored in your repository. They're just
+                        regular files - they work as long as your repo exists. Neither Offline Mode nor Auto Mode
+                        requires your computer to be on.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>What's the difference between Offline and Auto mode?</h3>
+                    <p><strong>Offline Mode:</strong> You manually run <code>linehook badge --save</code> and commit the
+                        files. <strong>Auto Mode:</strong> GitHub Actions automatically regenerates badges on every
+                        push. Both create static files - the only difference is who triggers the update.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Do I need to pay for anything?</h3>
+                    <p><strong>No!</strong> LineHook is completely free. GitHub Actions is free for public repos and has
+                        generous free tier for private repos.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>Can I use this on websites, not just READMEs?</h3>
+                    <p><strong>Yes!</strong> The generated SVG files work anywhere - HTML websites, documentation sites,
+                        dashboards. Just use an <code>&lt;img&gt;</code> tag or embed the SVG inline.</p>
+                </div>
+
+                <div class="faq-item">
+                    <h3>How do I get truly real-time badges?</h3>
+                    <p>For real-time badges (updating on every page view), you'll need a hosted service. Run
+                        <code>linehook webhook --serve</code> on a server like Vercel, Render, or Railway. The webhook
+                        endpoint returns fresh stats on every request.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <pre class="ascii-logo small">
+╦   ╦ ╔╗╔ ╔═╗ ╦ ╦ ╔═╗ ╔═╗ ╦╔═
+║   ║ ║║║ ║╣  ╠═╣ ║ ║ ║ ║ ╠╩╗
+╩═╝ ╩ ╝╚╝ ╚═╝ ╩ ╩ ╚═╝ ╚═╝ ╩ ╩</pre>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/NagusameCS/lineHook">
+                        <svg class="icon" style="fill: white;" viewBox="0 0 16 16" width="16" height="16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+                        GitHub
+                    </a>
+                    <a href="https://www.npmjs.com/package/linehook" style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">
+                        npm
+                    </a>
+                    <a href="https://github.com/NagusameCS/lineHook/issues">Issues</a>
+                </div>
+                <p class="footer-copy">MIT License - Made by <a href="https://github.com/NagusameCS">NagusameCS</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -8,3 +8,7 @@ config/*.json
 data/
 logs/
 secret.key
+venv/
+__pycache__/
+*.pyc
+.pyo

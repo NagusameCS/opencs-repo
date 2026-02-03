@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>knowtif</title>
+    <meta name="description"
+        content="Get notified when your GitHub changes propagate. Push, CI, Deploy - all in one command.">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/NagusameCS/knowtif/main/favicon.png">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/NagusameCS/knowtif/main/favicon.png">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="knowtif">
+    <meta property="og:description"
+        content="Get notified when your GitHub changes propagate. Push, CI, Deploy - all in one command.">
+    <meta property="og:image" content="https://raw.githubusercontent.com/NagusameCS/knowtif/main/banner.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://raw.githubusercontent.com/NagusameCS/knowtif/main/banner.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --black: #050505;
+            --dark: #0a0a0a;
+            --surface: #111;
+            --surface-2: #1a1a1a;
+            --border: #222;
+            --text: #eee;
+            --text-dim: #888;
+            --text-xdim: #555;
+            --purple: #b794f6;
+            --purple-dim: #7c5cb8;
+            --cyan: #67e8f9;
+            --green: #4ade80;
+            --red: #f87171;
+            --orange: #fb923c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--black);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated gradient background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -2;
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(183, 148, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(103, 232, 249, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 50% 30% at 20% 80%, rgba(74, 222, 128, 0.05) 0%, transparent 50%);
+        }
+
+        /* Scan lines */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.03) 2px,
+                    rgba(0, 0, 0, 0.03) 4px);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(to bottom, var(--black), transparent);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            transition: transform 0.2s;
+        }
+
+        .logo:hover img {
+            transform: scale(1.1);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.5rem;
+        }
+
+        .nav-links a {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--purple);
+        }
+
+        /* Hero */
+        header {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 6rem 0 4rem;
+            position: relative;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--purple);
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .hero-tag::before {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--purple);
+        }
+
+        h1 {
+            font-family: 'Space Mono', monospace;
+            font-size: clamp(3.5rem, 10vw, 7rem);
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 2rem;
+            letter-spacing: -0.02em;
+        }
+
+        h1 .highlight {
+            color: var(--purple);
+            position: relative;
+        }
+
+        h1 .highlight::after {
+            content: '';
+        }
+
+        .hero-desc {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            max-width: 500px;
+            margin-bottom: 3rem;
+        }
+
+        .hero-cmd {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            position: relative;
+        }
+
+        .hero-cmd::before {
+            content: '$';
+            color: var(--green);
+        }
+
+        .hero-cmd code {
+            color: var(--text);
+        }
+
+        .hero-cmd .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background: var(--purple);
+            animation: blink 1s infinite;
+            margin-left: 0.25rem;
+        }
+
+        .hero-visual {
+            position: absolute;
+            right: -100px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 500px;
+            height: 500px;
+            opacity: 0.6;
+        }
+
+        .hero-visual svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 4rem;
+            padding: 3rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-xdim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Sections */
+        section {
+            padding: 8rem 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .section-num {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--purple);
+            border: 1px solid var(--purple-dim);
+            padding: 0.25rem 0.75rem;
+        }
+
+        h2 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            background: var(--border);
+        }
+
+        .feature-card {
+            background: var(--dark);
+            padding: 2.5rem;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .feature-card:hover {
+            background: var(--surface);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: var(--purple);
+            transition: height 0.3s;
+        }
+
+        .feature-card:hover::before {
+            height: 100%;
+        }
+
+        .feature-tag {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        /* Channels */
+        .channels-row {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .channel {
+            flex: 1;
+            min-width: 180px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .channel:hover {
+            border-color: var(--purple-dim);
+            transform: translateY(-4px);
+        }
+
+        .channel-icon {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--orange);
+            background: rgba(251, 146, 60, 0.1);
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .channel h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .channel p {
+            font-size: 0.8rem;
+            color: var(--text-xdim);
+        }
+
+        /* Terminal */
+        .terminal {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            background: var(--surface);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .terminal-dot.r {
+            background: var(--red);
+        }
+
+        .terminal-dot.y {
+            background: var(--orange);
+        }
+
+        .terminal-dot.g {
+            background: var(--green);
+        }
+
+        .terminal-title {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-xdim);
+            margin-left: auto;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 2;
+        }
+
+        .terminal-body .prompt {
+            color: var(--green);
+        }
+
+        .terminal-body .cmd {
+            color: var(--text);
+        }
+
+        .terminal-body .comment {
+            color: var(--text-xdim);
+        }
+
+        .terminal-body .output {
+            color: var(--cyan);
+        }
+
+        /* Events list */
+        .events-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+        }
+
+        .event-item {
+            background: var(--dark);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.2s;
+        }
+
+        .event-item:hover {
+            background: var(--surface);
+        }
+
+        .event-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .event-badge {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .event-badge.ok {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--green);
+        }
+
+        .event-badge.err {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--red);
+        }
+
+        .event-badge.info {
+            background: rgba(103, 232, 249, 0.15);
+            color: var(--cyan);
+        }
+
+        /* CTA */
+        .cta {
+            text-align: center;
+            padding: 8rem 0;
+        }
+
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+
+        .cta p {
+            color: var(--text-dim);
+            margin-bottom: 2.5rem;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            font-family: 'Space Mono', monospace;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--purple);
+            color: var(--black);
+            padding: 1rem 2rem;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--text);
+            transform: translateY(-2px);
+        }
+
+        .btn::after {
+            content: '->';
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 3rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer p {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-xdim);
+        }
+
+        footer a {
+            color: var(--text-dim);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: var(--purple);
+        }
+
+        /* Extension section */
+        .extension-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .extension-feature {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            transition: all 0.2s;
+        }
+
+        .extension-feature:hover {
+            border-color: var(--purple-dim);
+            transform: translateY(-2px);
+        }
+
+        .extension-icon {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.25rem;
+            color: var(--cyan);
+            margin-bottom: 1rem;
+        }
+
+        .extension-feature h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .extension-feature p {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        .extension-stores {
+            background: var(--dark);
+            border: 1px solid var(--border);
+            padding: 2rem;
+        }
+
+        .extension-stores h4 {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-xdim);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+        }
+
+        .store-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .store-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem 1.25rem;
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .store-link:hover {
+            border-color: var(--purple);
+            background: var(--surface-2);
+        }
+
+        .store-link.coming-soon {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        .store-link.coming-soon:hover {
+            border-color: var(--border);
+            background: var(--surface);
+        }
+
+        .store-link .badge {
+            font-size: 0.65rem;
+            background: var(--purple-dim);
+            color: var(--text);
+            padding: 0.15rem 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .github-link:hover {
+            color: var(--purple);
+        }
+
+        /* Coming Soon Popup */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .popup {
+            position: fixed;
+            top: -300px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            border: 1px solid var(--purple-dim);
+            padding: 2rem 3rem;
+            z-index: 1001;
+            text-align: center;
+            transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s 0.4s;
+            box-shadow: 0 20px 60px rgba(183, 148, 246, 0.2);
+            visibility: hidden;
+        }
+
+        .popup.active {
+            top: 80px;
+            visibility: visible;
+            transition: top 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0s 0s;
+        }
+
+        .popup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--purple), var(--cyan));
+        }
+
+        .popup-icon {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            color: var(--purple);
+            margin-bottom: 1rem;
+        }
+
+        .popup h3 {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--purple);
+        }
+
+        .popup p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .popup-close {
+            font-family: 'Space Mono', monospace;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .popup-close:hover {
+            border-color: var(--purple);
+            background: var(--surface-2);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .extension-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .events-list {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-gradient"></div>
+    <div class="scanlines"></div>
+
+    <nav>
+        <div class="container">
+            <a href="#" class="logo"><img src="https://raw.githubusercontent.com/NagusameCS/knowtif/main/favicon.png"
+                    alt="knowtif" style="height: 28px; vertical-align: middle;"></a>
+            <div class="nav-links">
+                <a href="#features">features</a>
+                <a href="#extension">extension</a>
+                <a href="#channels">channels</a>
+                <a href="#events">events</a>
+                <a href="https://www.npmjs.com/package/knowtif">npm</a>
+                <a href="https://github.com/NagusameCS/knowtif">github</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <div class="hero-content">
+                <div class="hero-tag">GitHub Notifications</div>
+                <h1>know<span class="highlight">tif</span></h1>
+                <p class="hero-desc">Get notified when your code propagates. Push, CI, Deploy, Health Check — all in one
+                    command.</p>
+                <div class="hero-cmd">
+                    <code>npx knowtif</code>
+                </div>
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value">5</span>
+                    <span class="stat-label">Channels</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">14+</span>
+                    <span class="stat-label">Events</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">Servers</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">&lt;1m</span>
+                    <span class="stat-label">Setup</span>
+                </div>
+            </div>
+
+            <div class="badges-row" style="margin-top: 2rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <img src="https://raw.githubusercontent.com/NagusameCS/knowtif/main/.linehook/badges/lines.svg"
+                    alt="Lines" style="height: 20px;">
+                <img src="https://raw.githubusercontent.com/NagusameCS/knowtif/main/.linehook/badges/files.svg"
+                    alt="Files" style="height: 20px;">
+                <img src="https://raw.githubusercontent.com/NagusameCS/knowtif/main/.linehook/badges/code.svg"
+                    alt="Code" style="height: 20px;">
+                <img src="https://img.shields.io/npm/v/knowtif?color=b794f6&style=flat-square&label=npm"
+                    alt="npm version" style="height: 20px;">
+            </div>
+        </header>
+
+        <section id="features">
+            <div class="section-header">
+                <span class="section-num">01</span>
+                <h2>Features</h2>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-tag">realtime</div>
+                    <h3>Push Notifications</h3>
+                    <p>Know the instant your code reaches GitHub. No refresh needed.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-tag">workflows</div>
+                    <h3>CI Monitoring</h3>
+                    <p>Get notified when pipelines pass or fail. Never miss a broken build.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-tag">deploy</div>
+                    <h3>Deployment Status</h3>
+                    <p>Track deployments to any environment in real-time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-tag">verify</div>
+                    <h3>Health Checks</h3>
+                    <p>Verify your app is reachable after every deployment.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-tag">collab</div>
+                    <h3>PR Activity</h3>
+                    <p>Track pull requests, reviews, approvals, and merges.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-tag">secure</div>
+                    <h3>Encrypted Storage</h3>
+                    <p>Credentials secured with AES-256 encryption locally.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="extension">
+            <div class="section-header">
+                <span class="section-num">02</span>
+                <h2>Browser Extension</h2>
+            </div>
+
+            <p style="color: var(--text-dim); margin-bottom: 2rem; max-width: 600px;">
+                Get knowtif notifications directly in your browser. Real-time alerts without leaving your workflow.
+            </p>
+
+            <div class="extension-grid">
+                <div class="extension-feature">
+                    <div class="extension-icon">[!]</div>
+                    <h3>Native Notifications</h3>
+                    <p>Browser push notifications for all your GitHub events</p>
+                </div>
+                <div class="extension-feature">
+                    <div class="extension-icon">[>]</div>
+                    <h3>Instant Updates</h3>
+                    <p>Real-time alerts as your CI runs and deployments complete</p>
+                </div>
+                <div class="extension-feature">
+                    <div class="extension-icon">[*]</div>
+                    <h3>Smart Filtering</h3>
+                    <p>Customize which events trigger notifications</p>
+                </div>
+                <div class="extension-feature">
+                    <div class="extension-icon">[#]</div>
+                    <h3>Privacy First</h3>
+                    <p>No data collection - everything stays in your browser</p>
+                </div>
+            </div>
+
+            <div class="extension-stores">
+                <h4>Available for</h4>
+                <div class="store-links">
+                    <a href="#" class="store-link coming-soon" title="Coming Soon">
+                        <svg width="20" height="20" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M28.9905 10.7265C28.3816 9.2574 27.1473 7.67139 26.1784 7.17039C26.967 8.72015 27.4232 10.2746 27.5976 11.4344C27.5976 11.4344 27.5976 11.4426 27.6005 11.4578C26.0156 7.49777 23.3277 5.90065 21.1327 2.42407C21.0213 2.24869 20.9105 2.07331 20.802 1.88566C20.7407 1.77985 20.6911 1.68397 20.648 1.59336C20.557 1.41757 20.4867 1.23179 20.4386 1.03975C20.439 1.03063 20.4359 1.02169 20.4301 1.01467C20.4243 1.00765 20.4161 1.00305 20.4071 1.00175C20.3985 0.999416 20.3894 0.999416 20.3808 1.00175C20.3785 1.00281 20.3763 1.00419 20.3744 1.00584C20.3709 1.00584 20.3674 1.00994 20.3639 1.0111L20.3697 1.0035C16.8483 3.07063 15.6536 6.89446 15.544 8.80784C14.1368 8.90428 12.7913 9.42358 11.683 10.298C11.5672 10.1998 11.4461 10.1081 11.3202 10.0232C11.0008 8.9027 10.9873 7.71683 11.2811 6.58931C9.84091 7.24697 8.72095 8.28463 7.90664 9.20303H7.90023C7.34433 8.49742 7.38341 6.17015 7.41491 5.68435C7.40849 5.65395 7.00076 5.89656 6.94826 5.93339C6.45773 6.2841 5.9992 6.67771 5.57805 7.1096C5.0988 7.59655 4.66096 8.12276 4.26909 8.68274C3.36752 9.96323 2.72814 11.4101 2.3879 12.9398C2.38149 12.9702 2.37565 13.0017 2.36924 13.0327C2.34299 13.1561 2.24791 13.7751 2.23099 13.9096V13.9406C2.10704 14.5803 2.02984 15.2282 2 15.8791V15.951C2 23.7097 8.27646 30 16.0182 30C22.9521 30 28.7088 24.9549 29.8364 18.328C29.8597 18.1485 29.8789 17.9673 29.8999 17.786C30.1788 15.3763 29.869 12.8439 28.9905 10.7265ZM12.8327 21.7239C12.8981 21.7549 12.9599 21.7894 13.027 21.8197L13.0363 21.8256C12.9692 21.7929 12.901 21.759 12.8333 21.7239H12.8327ZM27.6017 11.4642V11.4508V11.466V11.4642Z"
+                                fill="url(#paint0_linear_87_7118)"></path>
+                            <path
+                                d="M28.9907 10.7265C28.3818 9.25741 27.1475 7.67141 26.1786 7.17041C26.9672 8.72017 27.4234 10.2746 27.5978 11.4344V11.4631C28.9208 15.0572 28.1998 18.7121 27.1615 20.9452C25.555 24.4002 21.6661 27.9416 15.578 27.7692C9.00581 27.5821 3.21175 22.6885 2.1297 16.2842C1.93254 15.2735 2.1297 14.7608 2.22886 13.9406C2.10812 14.5725 2.06203 14.7555 2.00195 15.8791V15.951C2.00195 23.7098 8.27842 30 16.0202 30C22.954 30 28.7108 24.9549 29.8383 18.328C29.8616 18.1485 29.8809 17.9673 29.9019 17.7861C30.179 15.3764 29.8692 12.8439 28.9907 10.7265Z"
+                                fill="url(#paint1_radial_87_7118)"></path>
+                            <path
+                                d="M28.9907 10.7265C28.3818 9.25741 27.1475 7.67141 26.1786 7.17041C26.9672 8.72017 27.4234 10.2746 27.5978 11.4344V11.4631C28.9208 15.0572 28.1998 18.7121 27.1615 20.9452C25.555 24.4002 21.6661 27.9416 15.578 27.7692C9.00581 27.5821 3.21175 22.6885 2.1297 16.2842C1.93254 15.2735 2.1297 14.7608 2.22886 13.9406C2.10812 14.5725 2.06203 14.7555 2.00195 15.8791V15.951C2.00195 23.7098 8.27842 30 16.0202 30C22.954 30 28.7108 24.9549 29.8383 18.328C29.8616 18.1485 29.8809 17.9673 29.9019 17.7861C30.179 15.3764 29.8692 12.8439 28.9907 10.7265Z"
+                                fill="url(#paint2_radial_87_7118)"></path>
+                            <path
+                                d="M22.1776 12.3773C22.2085 12.3989 22.2359 12.4205 22.2651 12.4422C21.9133 11.8161 21.4749 11.243 20.9631 10.7398C16.6058 6.37292 19.821 1.27058 20.3629 1.01102L20.3687 1.00342C16.8473 3.07054 15.6526 6.89438 15.543 8.80776C15.7063 8.79665 15.869 8.78262 16.0353 8.78262C18.6631 8.78262 20.952 10.2312 22.1776 12.3773Z"
+                                fill="url(#paint3_radial_87_7118)"></path>
+                            <path
+                                d="M16.0446 13.2499C16.0219 13.6006 14.7899 14.8049 14.3589 14.8049C10.3725 14.8049 9.72559 17.2216 9.72559 17.2216C9.90058 19.2572 11.3157 20.9332 13.0277 21.82C13.1059 21.8604 13.1846 21.8966 13.2611 21.9329C13.3981 21.9913 13.5358 22.0498 13.6729 22.1018C14.26 22.3094 14.8748 22.4276 15.4969 22.4526C22.4838 22.7811 23.8383 14.08 18.7955 11.5534C20.0864 11.3283 21.4269 11.8492 22.1753 12.3759C20.9503 10.2299 18.6608 8.78125 16.033 8.78125C15.8667 8.78125 15.704 8.79528 15.5406 8.80639C14.1345 8.90403 12.7903 9.4239 11.6832 10.2983C11.8973 10.4801 12.1388 10.7221 12.6468 11.2237C13.6 12.1661 16.0394 13.1359 16.0446 13.2499Z"
+                                fill="url(#paint4_radial_87_7118)"></path>
+                            <path
+                                d="M16.0446 13.2499C16.0219 13.6006 14.7899 14.8049 14.3589 14.8049C10.3725 14.8049 9.72559 17.2216 9.72559 17.2216C9.90058 19.2572 11.3157 20.9332 13.0277 21.82C13.1059 21.8604 13.1846 21.8966 13.2611 21.9329C13.3981 21.9913 13.5358 22.0498 13.6729 22.1018C14.26 22.3094 14.8748 22.4276 15.4969 22.4526C22.4838 22.7811 23.8383 14.08 18.7955 11.5534C20.0864 11.3283 21.4269 11.8492 22.1753 12.3759C20.9503 10.2299 18.6608 8.78125 16.033 8.78125C15.8667 8.78125 15.704 8.79528 15.5406 8.80639C14.1345 8.90403 12.7903 9.4239 11.6832 10.2983C11.8973 10.4801 12.1388 10.7221 12.6468 11.2237C13.6 12.1661 16.0394 13.1359 16.0446 13.2499Z"
+                                fill="url(#paint5_radial_87_7118)"></path>
+                            <path
+                                d="M11.0311 9.83093C11.1448 9.90459 11.2382 9.96656 11.3227 10.0233C11.0034 8.90275 10.9899 7.71688 11.2837 6.58936C9.84345 7.24702 8.72349 8.28468 7.90918 9.20308C7.97509 9.20132 10.0085 9.16449 11.0311 9.83093Z"
+                                fill="url(#paint6_radial_87_7118)"></path>
+                            <path
+                                d="M2.1297 16.284C3.21175 22.6883 9.00581 27.5819 15.5827 27.769C21.6707 27.9414 25.5574 24.4 27.1661 20.945C28.2044 18.7113 28.9254 15.057 27.6025 11.4629V11.436C27.6025 11.4395 27.6025 11.4442 27.6054 11.4594C28.1024 14.7138 26.451 17.8665 23.8692 19.9986C23.8666 20.0045 23.8641 20.0106 23.8617 20.0167C18.8306 24.1223 14.0165 22.4936 13.0418 21.8289C12.9741 21.7962 12.9059 21.7623 12.8382 21.7272C9.9047 20.3242 8.69316 17.6438 8.95273 15.3469C6.47656 15.3469 5.63192 13.2529 5.63192 13.2529C5.63192 13.2529 7.85552 11.664 10.7861 13.046C13.5003 14.3262 16.0493 13.2535 16.0493 13.2529C16.0441 13.1389 13.6047 12.1662 12.6533 11.2267C12.1452 10.7251 11.9037 10.4831 11.6896 10.3013C11.5738 10.2031 11.4527 10.1114 11.3268 10.0265C11.2434 9.96809 11.1518 9.90963 11.0352 9.83421C10.0126 9.16778 7.97918 9.20461 7.9121 9.20636H7.90568C7.34978 8.50076 7.38886 6.17348 7.42036 5.68769C7.41395 5.65729 7.00621 5.89989 6.95371 5.93672C6.46318 6.28743 6.00465 6.68104 5.58351 7.11293C5.10426 7.59988 4.66642 8.12609 4.27455 8.68607C3.37298 9.96657 2.7336 11.4134 2.39336 12.9431C2.38228 12.97 1.88354 15.1523 2.1297 16.284Z"
+                                fill="url(#paint7_radial_87_7118)"></path>
+                            <path
+                                d="M20.9634 10.7399C21.4752 11.2431 21.9135 11.8162 22.2653 12.4423C22.3383 12.4971 22.4083 12.5557 22.4753 12.6176C25.6532 15.55 23.9908 19.7012 23.8642 19.9993C26.446 17.8673 28.0973 14.7146 27.6003 11.4601C26.0155 7.49777 23.3276 5.90065 21.1325 2.42407C21.0211 2.24869 20.9103 2.07331 20.8018 1.88566C20.7406 1.77985 20.691 1.68397 20.6478 1.59336C20.5569 1.41757 20.4866 1.23179 20.4384 1.03975C20.4388 1.03063 20.4358 1.02169 20.43 1.01467C20.4241 1.00765 20.4159 1.00305 20.4069 1.00175C20.3983 0.999416 20.3893 0.999416 20.3807 1.00175C20.3783 1.00281 20.3762 1.00419 20.3742 1.00584C20.3707 1.00584 20.3672 1.00994 20.3637 1.0111C19.8213 1.27066 16.606 6.37301 20.9634 10.7399Z"
+                                fill="url(#paint8_radial_87_7118)"></path>
+                            <path
+                                d="M22.4743 12.6146C22.4073 12.5526 22.3372 12.4941 22.2643 12.4392C22.2357 12.4176 22.206 12.396 22.1768 12.3743C21.4284 11.8482 20.088 11.3267 18.7971 11.5518C23.8393 14.0784 22.4854 22.7795 15.4985 22.451C14.8764 22.426 14.2616 22.3078 13.6744 22.1002C13.5374 22.0488 13.3997 21.9921 13.2626 21.9313C13.1833 21.895 13.1045 21.8588 13.0293 21.8185L13.0386 21.8243C14.0133 22.4908 18.8274 24.1194 23.8585 20.0121C23.8585 20.0121 23.8614 20.0045 23.8661 19.9939C23.9909 19.7011 25.6534 15.5499 22.4743 12.6146Z"
+                                fill="url(#paint9_radial_87_7118)"></path>
+                            <path
+                                d="M9.72532 17.2215C9.72532 17.2215 10.3722 14.8048 14.3586 14.8048C14.7897 14.8048 16.0216 13.5994 16.0444 13.2498C16.0671 12.9002 13.4953 14.3231 10.7811 13.0428C7.85055 11.6608 5.62695 13.2498 5.62695 13.2498C5.62695 13.2498 6.47159 15.3438 8.94776 15.3438C8.68819 17.6407 9.89973 20.3187 12.8332 21.7241C12.8986 21.755 12.9604 21.7895 13.0275 21.8199C11.3154 20.9349 9.90207 19.2571 9.72532 17.2215Z"
+                                fill="url(#paint10_radial_87_7118)"></path>
+                            <path
+                                d="M28.9905 10.7265C28.3816 9.2574 27.1473 7.67139 26.1784 7.17039C26.967 8.72015 27.4232 10.2746 27.5976 11.4344C27.5976 11.4344 27.5976 11.4426 27.6005 11.4578C26.0156 7.49777 23.3277 5.90065 21.1327 2.42407C21.0213 2.24869 20.9105 2.07331 20.802 1.88566C20.7407 1.77985 20.6911 1.68397 20.648 1.59336C20.557 1.41757 20.4867 1.23179 20.4386 1.03975C20.439 1.03063 20.4359 1.02169 20.4301 1.01467C20.4243 1.00765 20.4161 1.00305 20.4071 1.00175C20.3985 0.999416 20.3894 0.999416 20.3808 1.00175C20.3785 1.00281 20.3763 1.00419 20.3744 1.00584C20.3709 1.00584 20.3674 1.00994 20.3639 1.0111L20.3697 1.0035C16.8483 3.07063 15.6536 6.89446 15.544 8.80784C15.7073 8.79673 15.8701 8.78271 16.0363 8.78271C18.6641 8.78271 20.9531 10.2313 22.1786 12.3774C21.4302 11.8512 20.0898 11.3298 18.7989 11.5549C23.841 14.0815 22.4872 22.7826 15.5002 22.454C14.8782 22.429 14.2633 22.3108 13.6762 22.1033C13.5391 22.0518 13.4015 21.9951 13.2644 21.9343C13.1851 21.8981 13.1063 21.8618 13.0311 21.8215L13.0404 21.8273C12.9727 21.7946 12.9045 21.7607 12.8368 21.7256C12.9021 21.7566 12.964 21.7911 13.0311 21.8215C11.3155 20.9347 9.90216 19.2569 9.72542 17.2213C9.72542 17.2213 10.3723 14.8046 14.3587 14.8046C14.7898 14.8046 16.0217 13.5992 16.0445 13.2496C16.0392 13.1356 13.5998 12.1628 12.6484 11.2234C12.1403 10.7218 11.8988 10.4798 11.6848 10.298C11.5689 10.1998 11.4478 10.1081 11.3219 10.0232C11.0026 8.9027 10.9891 7.71683 11.2829 6.58931C9.84266 7.24697 8.7227 8.28463 7.90839 9.20303H7.90198C7.34608 8.49742 7.38516 6.17015 7.41666 5.68435C7.41024 5.65395 7.00251 5.89656 6.95001 5.93339C6.45948 6.2841 6.00095 6.67771 5.5798 7.1096C5.10055 7.59655 4.66271 8.12276 4.27084 8.68274C3.36927 9.96323 2.72989 11.4101 2.38965 12.9398C2.38324 12.9702 2.3774 13.0017 2.37099 13.0327C2.34474 13.1561 2.22574 13.7839 2.20941 13.9184C2.20941 13.9289 2.20941 13.9084 2.20941 13.9184C2.10019 14.5671 2.03026 15.2219 2 15.8791V15.951C2 23.7097 8.27646 30 16.0182 30C22.9521 30 28.7088 24.9549 29.8364 18.328C29.8597 18.1485 29.8789 17.9673 29.8999 17.786C30.1788 15.3763 29.869 12.8439 28.9905 10.7265ZM27.5999 11.4479V11.4631V11.4479Z"
+                                fill="url(#paint11_linear_87_7118)"></path>
+                            <defs>
+                                <linearGradient id="paint0_linear_87_7118" x1="27.135" y1="5.49261" x2="3.81392"
+                                    y2="27.9437" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0.05" stop-color="#FFF44F"></stop>
+                                    <stop offset="0.11" stop-color="#FFE847"></stop>
+                                    <stop offset="0.22" stop-color="#FFC830"></stop>
+                                    <stop offset="0.37" stop-color="#FF980E"></stop>
+                                    <stop offset="0.4" stop-color="#FF8B16"></stop>
+                                    <stop offset="0.46" stop-color="#FF672A"></stop>
+                                    <stop offset="0.53" stop-color="#FF3647"></stop>
+                                    <stop offset="0.7" stop-color="#E31587"></stop>
+                                </linearGradient>
+                                <radialGradient id="paint1_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(26.0596 4.21879) scale(29.2246 29.2888)">
+                                    <stop offset="0.13" stop-color="#FFBD4F"></stop>
+                                    <stop offset="0.19" stop-color="#FFAC31"></stop>
+                                    <stop offset="0.25" stop-color="#FF9D17"></stop>
+                                    <stop offset="0.28" stop-color="#FF980E"></stop>
+                                    <stop offset="0.4" stop-color="#FF563B"></stop>
+                                    <stop offset="0.47" stop-color="#FF3750"></stop>
+                                    <stop offset="0.71" stop-color="#F5156C"></stop>
+                                    <stop offset="0.78" stop-color="#EB0878"></stop>
+                                    <stop offset="0.86" stop-color="#E50080"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint2_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(15.3809 16.1925) scale(29.2246 29.2888)">
+                                    <stop offset="0.3" stop-color="#960E18"></stop>
+                                    <stop offset="0.35" stop-color="#B11927" stop-opacity="0.74"></stop>
+                                    <stop offset="0.43" stop-color="#DB293D" stop-opacity="0.34"></stop>
+                                    <stop offset="0.5" stop-color="#F5334B" stop-opacity="0.09"></stop>
+                                    <stop offset="0.53" stop-color="#FF3750" stop-opacity="0"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint3_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(18.904 -2.42815) scale(21.172 21.2184)">
+                                    <stop offset="0.13" stop-color="#FFF44F"></stop>
+                                    <stop offset="0.25" stop-color="#FFDC3E"></stop>
+                                    <stop offset="0.51" stop-color="#FF9D12"></stop>
+                                    <stop offset="0.53" stop-color="#FF980E"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint4_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(12.1487 23.8433) scale(13.915 13.9455)">
+                                    <stop offset="0.35" stop-color="#3A8EE6"></stop>
+                                    <stop offset="0.47" stop-color="#5C79F0"></stop>
+                                    <stop offset="0.67" stop-color="#9059FF"></stop>
+                                    <stop offset="1" stop-color="#C139E6"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint5_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(15.8005 12.7119) rotate(-13.9265) scale(7.37316 8.67852)">
+                                    <stop offset="0.21" stop-color="#9059FF" stop-opacity="0"></stop>
+                                    <stop offset="0.28" stop-color="#8C4FF3" stop-opacity="0.06"></stop>
+                                    <stop offset="0.75" stop-color="#7716A8" stop-opacity="0.45"></stop>
+                                    <stop offset="0.97" stop-color="#6E008B" stop-opacity="0.6"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint6_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(15.011 3.02041) scale(10.0108 10.0328)">
+                                    <stop stop-color="#FFE226"></stop>
+                                    <stop offset="0.12" stop-color="#FFDB27"></stop>
+                                    <stop offset="0.3" stop-color="#FFC82A"></stop>
+                                    <stop offset="0.5" stop-color="#FFA930"></stop>
+                                    <stop offset="0.73" stop-color="#FF7E37"></stop>
+                                    <stop offset="0.79" stop-color="#FF7139"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint7_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(22.8805 -3.34313) scale(42.7109 42.8046)">
+                                    <stop offset="0.11" stop-color="#FFF44F"></stop>
+                                    <stop offset="0.46" stop-color="#FF980E"></stop>
+                                    <stop offset="0.62" stop-color="#FF5634"></stop>
+                                    <stop offset="0.72" stop-color="#FF3647"></stop>
+                                    <stop offset="0.9" stop-color="#E31587"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint8_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(18.7517 1.33374) rotate(84.2447) scale(31.1996 20.4543)">
+                                    <stop stop-color="#FFF44F"></stop>
+                                    <stop offset="0.06" stop-color="#FFE847"></stop>
+                                    <stop offset="0.17" stop-color="#FFC830"></stop>
+                                    <stop offset="0.3" stop-color="#FF980E"></stop>
+                                    <stop offset="0.36" stop-color="#FF8B16"></stop>
+                                    <stop offset="0.45" stop-color="#FF672A"></stop>
+                                    <stop offset="0.57" stop-color="#FF3647"></stop>
+                                    <stop offset="0.74" stop-color="#E31587"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint9_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(14.7757 6.73593) scale(26.6644 26.723)">
+                                    <stop offset="0.14" stop-color="#FFF44F"></stop>
+                                    <stop offset="0.48" stop-color="#FF980E"></stop>
+                                    <stop offset="0.59" stop-color="#FF5634"></stop>
+                                    <stop offset="0.66" stop-color="#FF3647"></stop>
+                                    <stop offset="0.9" stop-color="#E31587"></stop>
+                                </radialGradient>
+                                <radialGradient id="paint10_radial_87_7118" cx="0" cy="0" r="1"
+                                    gradientUnits="userSpaceOnUse"
+                                    gradientTransform="translate(21.8145 8.30059) scale(29.1844 29.2484)">
+                                    <stop offset="0.09" stop-color="#FFF44F"></stop>
+                                    <stop offset="0.23" stop-color="#FFE141"></stop>
+                                    <stop offset="0.51" stop-color="#FFAF1E"></stop>
+                                    <stop offset="0.63" stop-color="#FF980E"></stop>
+                                </radialGradient>
+                                <linearGradient id="paint11_linear_87_7118" x1="26.855" y1="5.37218" x2="7.01043"
+                                    y2="25.1739" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0.17" stop-color="#FFF44F" stop-opacity="0.8"></stop>
+                                    <stop offset="0.27" stop-color="#FFF44F" stop-opacity="0.63"></stop>
+                                    <stop offset="0.49" stop-color="#FFF44F" stop-opacity="0.22"></stop>
+                                    <stop offset="0.6" stop-color="#FFF44F" stop-opacity="0"></stop>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        Firefox
+                        <span class="badge">soon</span>
+                    </a>
+                    <a href="#" class="store-link coming-soon" title="Coming Soon">
+                        <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#1e88e5"
+                                d="M40.69,35.42c-9.15,11.88-21.41,8.8-26.23,6.1 c-7.35-4.11-12.5-13.68-9.44-23.25c0.9-2.82,2.27-5.23,3.98-7.23c1.67,0.13,3.65,0.13,6-0.04c14-1,18,11,17,14 c-0.51,1.53-2.32,2.02-3.97,2.13c0.16-0.22,0.36-0.54,0.64-1.02c0.87-1.54,0.98-4.49-1.73-6.27c-2.61-1.7-5.43-0.65-6.88,1.28 c-1.45,1.92-0.88,4.81-0.37,6.09c2.2,5.52,6.26,6.95,9.02,7.78c2.76,0.83,6.86,0.71,9.05-0.19c2.18-0.91,2.8-1.43,3.22-0.97 C41.41,34.29,41.11,34.82,40.69,35.42z">
+                            </path>
+                            <path fill="#0d47a1"
+                                d="M40.732,35.42c-3.48,4.52-7.41,6.87-11.21,7.91 c-0.03,0.01-0.06,0.01-0.08,0.02c-2.2,0.42-3.95,0.08-5.85-0.29c-3.09-0.6-7.35-4.01-8.38-10.18c-0.88-5.31,1.63-9.81,5.59-12.54 c-0.26,0.24-0.49,0.5-0.7,0.78c-1.45,1.92-0.88,4.81-0.37,6.09c2.2,5.52,6.26,6.95,9.02,7.78c2.76,0.83,6.86,0.71,9.05-0.19 c2.18-0.91,2.8-1.43,3.22-0.97C41.452,34.29,41.152,34.82,40.732,35.42z">
+                            </path>
+                            <path fill="#00e5ff"
+                                d="M26.94,4.25c0.02,0.26,0.03,0.54,0.03,0.81c0,3.78-1.75,7.14-4.48,9.32 c-1.02-0.52-2.21-0.94-3.65-1.22c-4.07-0.78-10.63,1.1-13.3,5.77c-0.88,1.53-1.25,3.1-1.41,4.55c0.04-1.71,0.33-3.46,0.89-5.21 C8.31,8.01,17.86,3.05,26.94,4.25z">
+                            </path>
+                            <path fill="#00e676"
+                                d="M41.4,27.89c-2.76,2.78-6.27,2.86-8.67,2.73 c-2.41-0.12-3.59-0.82-4.69-1.5c-1.11-0.69-0.48-1.37-0.37-1.52c0.11-0.15,0.38-0.41,1-1.49c0.29-0.51,0.5-1.18,0.54-1.91 c4.62-3.43,7.96-8.49,9.16-14.34c2.92,2.95,4.3,6.21,4.79,7.61C44.04,19.99,44.71,24.56,41.4,27.89z">
+                            </path>
+                            <path fill="#1de9b6"
+                                d="M38.37,9.85v0.01c-1.2,5.85-4.54,10.91-9.16,14.34c0.03-0.42,0-0.87-0.1-1.32 c0-0.02-0.01-0.04-0.01-0.05c-0.25-1.47-0.99-3.33-2.22-4.77c-1.22-1.44-2.52-2.73-4.39-3.68c2.73-2.18,4.48-5.54,4.48-9.32 c0-0.27-0.01-0.55-0.03-0.81c0.4,0.05,0.79,0.11,1.19,0.19C32.74,5.33,36.04,7.49,38.37,9.85z">
+                            </path>
+                        </svg>
+                        Edge
+                        <span class="badge">soon</span>
+                    </a>
+                    <a href="#" class="store-link coming-soon" title="Coming Soon">
+                        <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="#ff1744"
+                                d="M24,4C12.947,4,4,12.947,4,24s8.947,20,20,20s20-8.947,20-20S35.053,4,24,4z M24,39c-5.263,0-10-6.896-10-15S18.737,9,24,9s10,6.896,10,15S29.263,39,24,39z">
+                            </path>
+                            <path fill="#d50000"
+                                d="M36.564,8.445C34.413,6.972,31.89,6,29.263,6c-3.948,0-7.524,1.98-10.166,5.079C20.573,9.77,22.255,9,24,9c5.263,0,10,6.896,10,15s-4.737,15-10,15c-1.745,0-3.427-0.77-4.903-2.079C21.739,40.02,25.315,42,29.263,42c2.626,0,5.15-0.972,7.3-2.444C41.097,35.891,44,30.29,44,24C44,17.711,41.097,12.11,36.564,8.445z">
+                            </path>
+                        </svg>
+                        Opera
+                        <span class="badge">soon</span>
+                    </a>
+                </div>
+                <a href="https://github.com/NagusameCS/knowtif-extension" class="github-link">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+                    </svg>
+                    View extension source on GitHub
+                </a>
+            </div>
+        </section>
+
+        <section id="channels">
+            <div class="section-header">
+                <span class="section-num">03</span>
+                <h2>Channels</h2>
+            </div>
+
+            <div class="channels-row">
+                <div class="channel">
+                    <div class="channel-icon">[DIS]</div>
+                    <h3>Discord</h3>
+                    <p>Rich embeds via webhook</p>
+                </div>
+                <div class="channel">
+                    <div class="channel-icon">[PHN]</div>
+                    <h3>Pushover</h3>
+                    <p>Phone notifications</p>
+                </div>
+                <div class="channel">
+                    <div class="channel-icon">[WEB]</div>
+                    <h3>ntfy.sh</h3>
+                    <p>Free browser push</p>
+                </div>
+                <div class="channel">
+                    <div class="channel-icon">[EML]</div>
+                    <h3>Email</h3>
+                    <p>SMTP with HTML</p>
+                </div>
+                <div class="channel">
+                    <div class="channel-icon">[API]</div>
+                    <h3>Webhook</h3>
+                    <p>Custom endpoints</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="events">
+            <div class="section-header">
+                <span class="section-num">04</span>
+                <h2>Events</h2>
+            </div>
+
+            <div class="events-list">
+                <div class="event-item">
+                    <span class="event-name">push</span>
+                    <span class="event-badge info">trigger</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">ci.passed</span>
+                    <span class="event-badge ok">success</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">ci.failed</span>
+                    <span class="event-badge err">failure</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">deploy.success</span>
+                    <span class="event-badge ok">success</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">deploy.failed</span>
+                    <span class="event-badge err">failure</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">health.ok</span>
+                    <span class="event-badge ok">success</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">pr.opened</span>
+                    <span class="event-badge info">trigger</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">pr.merged</span>
+                    <span class="event-badge ok">success</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">release</span>
+                    <span class="event-badge info">trigger</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">issue.opened</span>
+                    <span class="event-badge info">trigger</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">star</span>
+                    <span class="event-badge info">trigger</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-name">fork</span>
+                    <span class="event-badge info">trigger</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="section-header">
+                <span class="section-num">05</span>
+                <h2>Quick Start</h2>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <span class="terminal-dot r"></span>
+                    <span class="terminal-dot y"></span>
+                    <span class="terminal-dot g"></span>
+                    <span class="terminal-title">terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <div><span class="comment"># Run the setup wizard</span></div>
+                    <div><span class="prompt">$</span> <span class="cmd">npx knowtif</span></div>
+                    <div><span class="output">[OK] Setup complete</span></div>
+                    <div></div>
+                    <div><span class="comment"># Commit and push</span></div>
+                    <div><span class="prompt">$</span> <span class="cmd">git add .github/workflows/knowtif.yml</span>
+                    </div>
+                    <div><span class="prompt">$</span> <span class="cmd">git commit -m "Add notifications"</span></div>
+                    <div><span class="prompt">$</span> <span class="cmd">git push</span></div>
+                    <div><span class="output">[OK] Notifications active</span></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="cta">
+            <h2>Ready to get notified?</h2>
+            <p>Set up in under a minute. No server required.</p>
+            <a href="https://github.com/NagusameCS/knowtif" class="btn">View on GitHub</a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container" style="display: flex; justify-content: space-between; width: 100%;">
+            <p>knowtif :: MIT License</p>
+            <p><a href="https://www.npmjs.com/package/knowtif">npm</a> :: <a
+                    href="https://github.com/NagusameCS/knowtif">github</a></p>
+        </div>
+    </footer>
+
+    <!-- Coming Soon Popup -->
+    <div class="popup-overlay" id="popupOverlay"></div>
+    <div class="popup" id="popup">
+        <div class="popup-icon">[^]</div>
+        <h3>Coming Soon</h3>
+        <p>The browser extension is under development.<br>Check back soon!</p>
+        <button class="popup-close" id="popupClose">Got it</button>
+    </div>
+
+    <script>
+        (function () {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('popupOverlay');
+            const closeBtn = document.getElementById('popupClose');
+            const comingSoonLinks = document.querySelectorAll('.store-link.coming-soon');
+
+            function showPopup(e) {
+                e.preventDefault();
+                popup.classList.add('active');
+                overlay.classList.add('active');
+            }
+
+            function hidePopup() {
+                popup.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            comingSoonLinks.forEach(link => {
+                link.addEventListener('click', showPopup);
+            });
+
+            closeBtn.addEventListener('click', hidePopup);
+            overlay.addEventListener('click', hidePopup);
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') hidePopup();
+            });
+        })();
+    </script>
+</body>
+
+</html>

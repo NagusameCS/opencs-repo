@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo | Stock Analysis Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="logo">
+                    <span class="logo-symbol">Σ</span>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">Echo</span>
+                    <span class="brand-tagline">Mathematical Stock Analysis</span>
+                </div>
+            </div>
+            <div class="nav-status">
+                <div class="status-indicator" id="api-status"></div>
+                <span class="status-text" id="status-text">Connecting...</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Stock Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="stock-input" class="search-input"
+                        placeholder="Enter stock symbol (e.g., AAPL, MSFT, NVDA)" maxlength="5">
+                    <button id="analyze-btn" class="analyze-btn">
+                        <span>Analyze</span>
+                        <span class="btn-icon">→</span>
+                    </button>
+                </div>
+                <div class="quick-picks">
+                    <span class="quick-label">Quick:</span>
+                    <button class="quick-btn" data-symbol="AAPL">AAPL</button>
+                    <button class="quick-btn" data-symbol="MSFT">MSFT</button>
+                    <button class="quick-btn" data-symbol="NVDA">NVDA</button>
+                    <button class="quick-btn" data-symbol="GOOGL">GOOGL</button>
+                    <button class="quick-btn" data-symbol="TSLA">TSLA</button>
+                    <button class="quick-btn" data-symbol="AMD">AMD</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stock Info Header -->
+        <section class="stock-header hidden" id="stock-header">
+            <div class="stock-info">
+                <div class="stock-identity">
+                    <h1 class="stock-symbol" id="display-symbol">—</h1>
+                    <span class="stock-name" id="display-name">Select a stock to analyze</span>
+                </div>
+                <div class="stock-price-section">
+                    <span class="current-price" id="current-price">—</span>
+                    <span class="price-change" id="price-change">—</span>
+                </div>
+            </div>
+            <div class="stock-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Open</span>
+                    <span class="meta-value" id="meta-open">—</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">High</span>
+                    <span class="meta-value" id="meta-high">—</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Low</span>
+                    <span class="meta-value" id="meta-low">—</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Volume</span>
+                    <span class="meta-value" id="meta-volume">—</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">52W High</span>
+                    <span class="meta-value" id="meta-52high">—</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">52W Low</span>
+                    <span class="meta-value" id="meta-52low">—</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Grid -->
+        <section class="dashboard-grid hidden" id="dashboard">
+            <!-- Price Chart Panel -->
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="title-icon">φ</span>
+                        Price History + Projection
+                    </h2>
+                    <div class="panel-controls">
+                        <span class="control-label">History:</span>
+                        <button class="control-btn" data-range="30">1M</button>
+                        <button class="control-btn active" data-range="90">3M</button>
+                        <button class="control-btn" data-range="180">6M</button>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="price-chart"></canvas>
+                </div>
+                <div class="projection-controls">
+                    <span class="control-label"><span class="material-icons"
+                            style="font-size:16px;vertical-align:middle">auto_awesome</span> Projection:</span>
+                    <button class="proj-btn" data-proj="5">5D</button>
+                    <button class="proj-btn" data-proj="14">2W</button>
+                    <button class="proj-btn active" data-proj="30">1M</button>
+                    <button class="proj-btn" data-proj="90">3M</button>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot price"></span>
+                        <span>Historical Price</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot sma20"></span>
+                        <span>SMA(20)</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot sma50"></span>
+                        <span>SMA(50)</span>
+                    </div>
+                    <div class="legend-item echo-protocol">
+                        <span class="legend-dot projection"></span>
+                        <span><span class="material-icons"
+                                style="font-size:14px;vertical-align:middle">auto_awesome</span> Echo Projection</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot bounds"></span>
+                        <span>Confidence Bounds</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Algorithm Analysis Panel - THE CENTER -->
+            <div class="panel algorithm-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="title-icon echo-icon">Σ</span>
+                        Algorithm Analysis
+                    </h2>
+                    <div class="echo-badge">
+                        <span>Echo Protocol</span>
+                    </div>
+                </div>
+
+                <!-- Final Verdict -->
+                <div class="verdict-section" id="verdict-section">
+                    <div class="verdict-header">
+                        <span class="verdict-label">ECHO VERDICT</span>
+                        <span class="verdict-action" id="verdict-action">ANALYZING...</span>
+                    </div>
+                    <div class="verdict-confidence">
+                        <span class="confidence-label">Confidence:</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidence-fill"></div>
+                        </div>
+                        <span class="confidence-value" id="confidence-value">—%</span>
+                    </div>
+                    <div class="verdict-expected">
+                        <span>Expected Movement (30d):</span>
+                        <span class="expected-value" id="expected-move">—</span>
+                    </div>
+                </div>
+
+                <!-- Individual Algorithms -->
+                <div class="algorithms-grid" id="algorithms-grid">
+                    <div class="algo-loading">
+                        <div class="spinner"></div>
+                        <span>Enter a stock symbol to analyze...</span>
+                    </div>
+                </div>
+
+                <!-- Consensus Bar -->
+                <div class="consensus-section" id="consensus-section">
+                    <div class="consensus-header">
+                        <span>Algorithm Consensus</span>
+                        <span class="consensus-ratio" id="consensus-ratio">—</span>
+                    </div>
+                    <div class="consensus-bar">
+                        <div class="consensus-buy" id="consensus-buy"></div>
+                        <div class="consensus-hold" id="consensus-hold"></div>
+                        <div class="consensus-sell" id="consensus-sell"></div>
+                    </div>
+                    <div class="consensus-labels">
+                        <span class="label-buy"><span id="buy-count">0</span> BUY</span>
+                        <span class="label-hold"><span id="hold-count">0</span> HOLD</span>
+                        <span class="label-sell"><span id="sell-count">0</span> SELL</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mathematical Proof Panel -->
+            <div class="panel proof-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="title-icon">∫</span>
+                        Mathematical Reasoning
+                    </h2>
+                </div>
+                <div class="proof-content" id="proof-content">
+                    <div class="proof-placeholder">
+                        <span class="proof-icon">∂</span>
+                        <p>Select a stock to see the mathematical derivation of each algorithm's signal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Analysis Panel -->
+            <div class="panel ai-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="title-icon"><span class="material-icons">psychology</span></span>
+                        AI Analysis
+                    </h2>
+                    <span class="ai-badge">Gemini</span>
+                </div>
+                <div class="ai-content" id="ai-content">
+                    <div class="ai-placeholder">
+                        <span class="material-icons" style="font-size:32px;color:var(--text-muted)">auto_awesome</span>
+                        <p>AI-powered analysis will appear after stock selection.</p>
+                    </div>
+                </div>
+                <div class="ai-config" id="ai-config">
+                    <input type="password" id="gemini-key" class="api-key-input"
+                        placeholder="Gemini API Key (optional)">
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="get-key-link">
+                        <span class="material-icons" style="font-size:14px">open_in_new</span> Get free key
+                    </a>
+                </div>
+            </div>
+
+            <!-- Politician Trades Panel -->
+            <div class="panel politician-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="title-icon"><span class="material-icons">account_balance</span></span>
+                        Congressional Trading Signal
+                    </h2>
+                    <span class="data-source">Data: Public STOCK Act Filings</span>
+                </div>
+                <div class="politician-content" id="politician-content">
+                    <div class="politician-placeholder">
+                        <p>Analyzes recent trades by US Congress members.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Sources Panel -->
+            <div class="panel sources-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">
+                        <span class="title-icon"><span class="material-icons">cloud_sync</span></span>
+                        Data Sources
+                    </h2>
+                </div>
+                <div class="sources-list">
+                    <div class="source-item">
+                        <span class="source-name">Yahoo Finance</span>
+                        <span class="source-status connected" id="yahoo-status">●</span>
+                    </div>
+                    <div class="source-item">
+                        <span class="source-name">House Stock Watcher</span>
+                        <span class="source-status" id="congress-status">●</span>
+                    </div>
+                    <div class="source-item">
+                        <span class="source-name">Gemini AI</span>
+                        <span class="source-status" id="gemini-status">●</span>
+                    </div>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="last-updated">—</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Initial State -->
+        <section class="initial-state" id="initial-state">
+            <div class="initial-content">
+                <div class="initial-icon">Σ</div>
+                <h2>Echo Stock Analysis Engine</h2>
+                <p>Enter a stock symbol above to begin mathematical analysis.</p>
+                <div class="initial-features">
+                    <div class="feature">
+                        <span class="feature-icon"><span class="material-icons">functions</span></span>
+                        <span>13 Mathematical Algorithms</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon"><span class="material-icons">candlestick_chart</span></span>
+                        <span>Real Market Data (Yahoo Finance)</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon"><span class="material-icons">account_balance</span></span>
+                        <span>Congressional Trade Tracking</span>
+                    </div>
+                    <div class="feature">
+                        <span class="feature-icon"><span class="material-icons">psychology</span></span>
+                        <span>Gemini AI Analysis (Free)</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-left">
+                <span class="footer-logo">Σ</span>
+                <span class="footer-text">Echo Analysis Engine</span>
+            </div>
+            <div class="footer-center">
+                <span class="footer-disclaimer">Educational purposes only. Not financial advice.</span>
+            </div>
+            <div class="footer-right">
+                <span class="footer-time" id="footer-time"></span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

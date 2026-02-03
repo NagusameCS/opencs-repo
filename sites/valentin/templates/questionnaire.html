@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentin - Questionnaire</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+
+<body class="questionnaire-body">
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="questionnaire-wrapper">
+        <div class="question-number" id="questionNumber">Question 1 of 20</div>
+
+        <div class="question-container" id="questionContainer">
+            <!-- Questions will be injected here by JS -->
+        </div>
+
+        <div class="navigation-buttons">
+            <button id="prevBtn" onclick="prevQuestion()" disabled>
+                <span class="btn-icon">←</span> Back
+            </button>
+            <button id="nextBtn" onclick="nextQuestion()">
+                Next <span class="btn-icon">→</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="success-icon">🎉</div>
+            <h2>Thank You!</h2>
+            <p>Your responses have been submitted successfully.</p>
+            <p>Check back later to see your matches!</p>
+            <button onclick="window.location.href='/'">Back to Home</button>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Sortable.js for drag rankings -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>

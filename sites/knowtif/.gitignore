@@ -1,0 +1,4 @@
+
+# LineHook temp files
+.linehook/stats.json
+node_modules/
