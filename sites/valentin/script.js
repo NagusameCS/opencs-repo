@@ -152,7 +152,29 @@ async function showResultsPage() {
     `;
     
     try {
-        const response = await fetch('/sites/valentin/api/results');
+        // Get user email from cookie, answers object, or URL
+        let userEmail = '';
+        
+        // First check if we have email in answers (from OAuth)
+        if (answers && answers.email) {
+            userEmail = answers.email;
+        }
+        
+        // Fallback to cookie
+        if (!userEmail) {
+            const emailCookie = document.cookie.split(';').find(c => c.trim().startsWith('valentin_email='));
+            if (emailCookie) {
+                userEmail = decodeURIComponent(emailCookie.split('=')[1]);
+            }
+        }
+        
+        console.log('Fetching results for email:', userEmail);
+        
+        // Fetch results with user's email
+        const url = userEmail 
+            ? `/sites/valentin/api/results?email=${encodeURIComponent(userEmail)}`
+            : '/sites/valentin/api/results';
+        const response = await fetch(url);
         const data = await response.json();
         
         if (data.error) {
@@ -163,9 +185,8 @@ async function showResultsPage() {
             if (data.error === 'no_match' || data.error === 'No Match Found') {
                 icon = '😔';
                 title = 'No Match Found';
-                message = `Sorry, your account doesn't have a match associated with it.<br><br>
+                message = `Sorry, we couldn't find a match for your account.<br><br>
                     <strong>Possible reasons:</strong><br>
-                    • Make sure you're logged in with the right account<br>
                     • You may not have submitted the forms on time<br>
                     • There wasn't a compatible match available<br><br>
                     <span style="color:#999;font-size:0.9rem;">Don't worry - there's always next year! 💕</span>`;
@@ -193,74 +214,74 @@ async function showResultsPage() {
             return;
         }
         
-        const { stats, matches } = data;
+        const { stats, match } = data;
         
-        let html = `
-            <div class="question-card" style="padding:30px;">
-                <h1 style="text-align:center;color:#ff4d6d;font-size:2rem;margin-bottom:10px;">💕 Your Results</h1>
-                <p style="text-align:center;color:#888;margin-bottom:30px;">Powered by compatibility scoring</p>
-                
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:30px;">
-                    <div style="text-align:center;padding:20px;background:#fff5f7;border-radius:16px;">
-                        <div style="font-size:2rem;font-weight:700;color:#ff4d6d;">${stats?.totalParticipants || 0}</div>
-                        <div style="color:#888;font-size:0.85rem;">Participants</div>
+        // Show individual match result
+        if (match) {
+            const scoreColor = match.compatibility >= 70 ? '#28a745' : match.compatibility >= 40 ? '#ffc107' : '#dc3545';
+            
+            container.innerHTML = `
+                <div class="question-card" style="padding:40px;text-align:center;">
+                    <div style="font-size:4rem;margin-bottom:10px;">💘</div>
+                    <h1 style="color:#ff4d6d;font-size:2.2rem;margin-bottom:5px;">Your Match!</h1>
+                    <p style="color:#888;margin-bottom:30px;">Happy Valentine's Day! 💕</p>
+                    
+                    <div style="background:linear-gradient(135deg,#fff5f7,#ffe0e6);border-radius:24px;padding:30px;margin-bottom:30px;border:3px solid #ff4d6d;">
+                        <div style="font-size:1.8rem;font-weight:700;color:#333;margin-bottom:10px;">
+                            ${match.name || match.email?.split('@')[0] || 'Your Match'}
+                        </div>
+                        <div style="font-size:1rem;color:#ff4d6d;margin-bottom:15px;">
+                            📧 ${match.email || 'Email not available'}
+                        </div>
+                        <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;color:#666;font-size:0.95rem;">
+                            ${match.gender ? `<span>👤 ${match.gender}</span>` : ''}
+                            ${match.grade ? `<span>📚 Grade ${match.grade}</span>` : ''}
+                            ${match.age ? `<span>🎂 Age ${match.age}</span>` : ''}
+                        </div>
+                        
+                        <div style="margin-top:25px;padding-top:25px;border-top:2px dashed #ffb3c1;">
+                            <div style="font-size:3rem;font-weight:700;color:${scoreColor};">${match.compatibility}%</div>
+                            <div style="color:#888;font-size:0.9rem;">Compatibility Score</div>
+                        </div>
                     </div>
-                    <div style="text-align:center;padding:20px;background:#fff5f7;border-radius:16px;">
-                        <div style="font-size:2rem;font-weight:700;color:#ff4d6d;">${stats?.matchCount || 0}</div>
-                        <div style="color:#888;font-size:0.85rem;">Matches</div>
+                    
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:30px;">
+                        <div style="padding:15px;background:#fff5f7;border-radius:12px;">
+                            <div style="font-size:1.5rem;font-weight:700;color:#ff4d6d;">${stats?.totalParticipants || 0}</div>
+                            <div style="color:#888;font-size:0.75rem;">Participants</div>
+                        </div>
+                        <div style="padding:15px;background:#fff5f7;border-radius:12px;">
+                            <div style="font-size:1.5rem;font-weight:700;color:#ff4d6d;">${stats?.matchCount || 0}</div>
+                            <div style="color:#888;font-size:0.75rem;">Matches Made</div>
+                        </div>
+                        <div style="padding:15px;background:#fff5f7;border-radius:12px;">
+                            <div style="font-size:1.5rem;font-weight:700;color:#ff4d6d;">${stats?.avgCompatibility || 0}%</div>
+                            <div style="color:#888;font-size:0.75rem;">Avg Score</div>
+                        </div>
                     </div>
-                    <div style="text-align:center;padding:20px;background:#fff5f7;border-radius:16px;">
-                        <div style="font-size:2rem;font-weight:700;color:#ff4d6d;">${stats?.avgCompatibility || 0}%</div>
-                        <div style="color:#888;font-size:0.85rem;">Avg Match</div>
-                    </div>
+                    
+                    <p style="color:#999;font-size:0.85rem;margin-bottom:20px;">
+                        💡 Reach out and say hi! You might have more in common than you think.
+                    </p>
+                    
+                    <a href="./" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;text-decoration:none;border-radius:50px;font-weight:600;box-shadow:0 6px 20px rgba(255,77,109,0.3);">
+                        ← Back to Home
+                    </a>
                 </div>
-        `;
-        
-        if (matches && matches.length > 0) {
-            html += '<h3 style="color:#333;margin-bottom:15px;">💘 Your Matches</h3>';
-            matches.forEach((match, index) => {
-                const score = Math.round(match.score);
-                const scoreColor = score >= 70 ? '#28a745' : score >= 40 ? '#ffc107' : '#dc3545';
-                
-                html += `
-                    <div style="display:flex;align-items:center;background:linear-gradient(135deg,#fff5f7,#fff);border-radius:16px;padding:20px;margin-bottom:15px;border:2px solid #ffe0e6;">
-                        <div style="width:45px;height:45px;background:#ff4d6d;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;margin-right:15px;">${index + 1}</div>
-                        <div style="flex:1;">
-                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                                <span style="font-weight:600;color:#333;">${match.person1?.email?.split('@')[0] || 'You'}</span>
-                                <span style="color:#ff4d6d;">💕</span>
-                                <span style="font-weight:600;color:#333;">${match.person2?.email?.split('@')[0] || 'Match'}</span>
-                            </div>
-                            <div style="color:#888;font-size:0.85rem;margin-top:5px;">
-                                ${match.person2?.gender || ''} • Grade ${match.person2?.grade || '?'} • Age ${match.person2?.age || '?'}
-                            </div>
-                        </div>
-                        <div style="text-align:center;min-width:70px;">
-                            <div style="font-size:1.4rem;font-weight:700;color:${scoreColor};">${score}%</div>
-                            <div style="color:#999;font-size:0.7rem;">match</div>
-                        </div>
-                    </div>
-                `;
-            });
+            `;
         } else {
-            html += `
-                <div style="text-align:center;padding:40px;color:#888;">
-                    <div style="font-size:3rem;margin-bottom:10px;">📭</div>
-                    <p>No matches found for your account.</p>
+            // No match found (shouldn't happen if API works correctly)
+            container.innerHTML = `
+                <div class="question-card" style="text-align:center;padding:60px 40px;">
+                    <div style="font-size:5rem;margin-bottom:20px;">😔</div>
+                    <h2 style="color:#ff4d6d;margin-bottom:20px;">No Match Found</h2>
+                    <p style="color:#666;margin-bottom:30px;">We couldn't find a match for you this time.</p>
+                    <a href="./" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;text-decoration:none;border-radius:50px;font-weight:600;box-shadow:0 6px 20px rgba(255,77,109,0.3);">
+                        ← Back to Home
+                    </a>
                 </div>
             `;
         }
-        
-        html += `
-            </div>
-            <div style="text-align:center;margin-top:20px;">
-                <a href="./" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;text-decoration:none;border-radius:50px;font-weight:600;box-shadow:0 6px 20px rgba(255,77,109,0.3);">
-                    ← Back to Home
-                </a>
-            </div>
-        `;
-        
-        container.innerHTML = html;
         
     } catch (error) {
         console.error('Error loading results:', error);

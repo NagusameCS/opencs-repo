@@ -590,8 +590,18 @@ app.get('/sites/valentin/api/submissions', (req, res) => {
 
 app.get('/sites/valentin/api/results', (req, res) => {
     try {
+        const userEmail = req.query.email;
         const submissions = getValentinSubmissions();
         const matchesData = getValentinMatches();
+        const settings = getValentinSettings();
+        
+        // Check if results are visible
+        if (!settings.resultsVisible) {
+            return res.json({
+                error: 'results_not_ready',
+                message: 'Results have not been released yet. Check back later!'
+            });
+        }
         
         // Calculate stats
         const totalParticipants = submissions.submissions.length;
@@ -600,6 +610,58 @@ app.get('/sites/valentin/api/results', (req, res) => {
             ? Math.round(matchesData.matches.reduce((sum, m) => sum + m.score, 0) / matchCount)
             : 0;
         
+        // If user email provided, find their specific match
+        if (userEmail) {
+            const userEmailLower = userEmail.toLowerCase();
+            
+            // Check if user submitted
+            const userSubmission = submissions.submissions.find(s => 
+                s.email && s.email.toLowerCase() === userEmailLower
+            );
+            
+            if (!userSubmission) {
+                return res.json({
+                    error: 'not_submitted',
+                    message: 'No submission found for your account.'
+                });
+            }
+            
+            // Find their match
+            const userMatch = matchesData.matches.find(m => 
+                (m.person1?.email?.toLowerCase() === userEmailLower) ||
+                (m.person2?.email?.toLowerCase() === userEmailLower)
+            );
+            
+            if (!userMatch) {
+                return res.json({
+                    error: 'no_match',
+                    message: 'No match found for your account.'
+                });
+            }
+            
+            // Determine which person is the user and which is their match
+            const isUser1 = userMatch.person1?.email?.toLowerCase() === userEmailLower;
+            const matchedPerson = isUser1 ? userMatch.person2 : userMatch.person1;
+            
+            return res.json({
+                stats: {
+                    totalParticipants,
+                    matchCount,
+                    avgCompatibility
+                },
+                match: {
+                    email: matchedPerson.email,
+                    name: matchedPerson.name || matchedPerson.email?.split('@')[0],
+                    gender: matchedPerson.gender,
+                    grade: matchedPerson.grade,
+                    age: matchedPerson.age,
+                    compatibility: Math.round(userMatch.score)
+                },
+                lastCalculated: matchesData.lastCalculated
+            });
+        }
+        
+        // No email - return all matches (for admin)
         res.json({
             stats: {
                 totalParticipants,
