@@ -1,7 +1,7 @@
 #!/bin/bash
-cd /home/deploy/management/webui
+cd /home/deploy/management
 git fetch origin
 git reset --hard origin/main
-npm install --production
+cd webui && npm install
 pm2 restart vps-portal
-echo "Deploy completed at $(date)"
+echo "Deploy complete at $(date)"
