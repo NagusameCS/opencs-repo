@@ -202,4 +202,83 @@ router.get('/backups', checkAdminAuth, async (req, res) => {
     }
 });
 
+// Update server.properties setting
+router.post('/setting', checkAdminAuth, async (req, res) => {
+    try {
+        const { key, value } = req.body;
+        
+        if (!key || value === undefined) {
+            return res.status(400).json({ error: 'Key and value required' });
+        }
+        
+        // Whitelist of allowed settings to modify
+        const allowedSettings = [
+            'enable-command-block',
+            'difficulty',
+            'gamemode',
+            'pvp',
+            'spawn-protection',
+            'max-players',
+            'view-distance',
+            'simulation-distance',
+            'allow-flight',
+            'hardcore',
+            'white-list',
+            'spawn-monsters',
+            'spawn-animals',
+            'spawn-npcs',
+            'allow-nether',
+            'force-gamemode'
+        ];
+        
+        if (!allowedSettings.includes(key)) {
+            return res.status(400).json({ error: `Setting '${key}' not allowed. Allowed: ${allowedSettings.join(', ')}` });
+        }
+        
+        const propsPath = `${MC_DIR}/server.properties`;
+        let content = await fs.readFile(propsPath, 'utf8');
+        
+        // Check if setting exists
+        const regex = new RegExp(`^${key}=.*$`, 'm');
+        if (regex.test(content)) {
+            content = content.replace(regex, `${key}=${value}`);
+        } else {
+            content += `\n${key}=${value}`;
+        }
+        
+        await fs.writeFile(propsPath, content);
+        
+        res.json({ 
+            success: true, 
+            message: `Set ${key}=${value}. Restart server to apply changes.`,
+            requiresRestart: true
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get current server.properties
+router.get('/settings', checkAdminAuth, async (req, res) => {
+    try {
+        const propsPath = `${MC_DIR}/server.properties`;
+        const content = await fs.readFile(propsPath, 'utf8');
+        
+        const settings = {};
+        content.split('\n').forEach(line => {
+            line = line.trim();
+            if (line && !line.startsWith('#')) {
+                const [key, ...valueParts] = line.split('=');
+                if (key) {
+                    settings[key] = valueParts.join('=');
+                }
+            }
+        });
+        
+        res.json({ settings });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;
