@@ -2,8 +2,8 @@
 
 Open source tools and projects by students.
 
-**Website:** [opencs.dev](https://opencs.dev)  
-**GitHub:** [OpenCS-dev](https://github.com/OpenCS-dev)
+🌐 **Website:** [opencs.dev](https://opencs.dev)  
+💻 **GitHub:** [OpenCS-dev](https://github.com/OpenCS-dev)
 
 ## Projects
 
