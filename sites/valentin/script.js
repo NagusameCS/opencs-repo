@@ -131,8 +131,160 @@ async function checkResultsStatus() {
     return { resultsVisible: false, formsClosed: false };
 }
 
+// Show results directly on the questionnaire page
+async function showResultsPage() {
+    const container = document.querySelector('.container');
+    if (!container) return;
+    
+    // Hide navigation and progress
+    const nav = document.querySelector('.navigation');
+    if (nav) nav.style.display = 'none';
+    const progressContainer = document.querySelector('.progress-bar-container');
+    if (progressContainer) progressContainer.style.display = 'none';
+    
+    container.innerHTML = `
+        <div class="question-card" style="text-align:center;padding:40px;">
+            <div style="font-size:3rem;margin-bottom:15px;">💕</div>
+            <h2 style="color:#ff4d6d;margin-bottom:10px;">Loading Your Results...</h2>
+            <div class="loading-spinner" style="margin:20px auto;width:40px;height:40px;border:4px solid #ffe0e6;border-top-color:#ff4d6d;border-radius:50%;animation:spin 1s linear infinite;"></div>
+        </div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    `;
+    
+    try {
+        const response = await fetch('/sites/valentin/api/results');
+        const data = await response.json();
+        
+        if (data.error) {
+            let icon = '💔';
+            let title = data.error;
+            let message = data.message || 'Please try again later';
+            
+            if (data.error === 'no_match' || data.error === 'No Match Found') {
+                icon = '😔';
+                title = 'No Match Found';
+                message = `Sorry, your account doesn't have a match associated with it.<br><br>
+                    <strong>Possible reasons:</strong><br>
+                    • Make sure you're logged in with the right account<br>
+                    • You may not have submitted the forms on time<br>
+                    • There wasn't a compatible match available<br><br>
+                    <span style="color:#999;font-size:0.9rem;">Don't worry - there's always next year! 💕</span>`;
+            } else if (data.error === 'results_not_ready') {
+                icon = '⏳';
+                title = 'Results Not Ready Yet';
+                message = 'The matchmaking process hasn\'t been completed yet.<br><br>Please check back later!';
+            } else if (data.error === 'not_submitted') {
+                icon = '📝';
+                title = 'No Submission Found';
+                message = `We couldn't find a questionnaire submission for your account.<br><br>
+                    Make sure you're logged in with the same account you used to fill out the form.`;
+            }
+            
+            container.innerHTML = `
+                <div class="question-card" style="text-align:center;padding:60px 40px;">
+                    <div style="font-size:5rem;margin-bottom:20px;">${icon}</div>
+                    <h2 style="color:#ff4d6d;margin-bottom:20px;font-size:2rem;">${title}</h2>
+                    <p style="color:#666;font-size:1.1rem;line-height:1.6;max-width:400px;margin:0 auto 30px;">${message}</p>
+                    <a href="./" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;text-decoration:none;border-radius:50px;font-weight:600;box-shadow:0 6px 20px rgba(255,77,109,0.3);">
+                        ← Back to Home
+                    </a>
+                </div>
+            `;
+            return;
+        }
+        
+        const { stats, matches } = data;
+        
+        let html = `
+            <div class="question-card" style="padding:30px;">
+                <h1 style="text-align:center;color:#ff4d6d;font-size:2rem;margin-bottom:10px;">💕 Your Results</h1>
+                <p style="text-align:center;color:#888;margin-bottom:30px;">Powered by compatibility scoring</p>
+                
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:30px;">
+                    <div style="text-align:center;padding:20px;background:#fff5f7;border-radius:16px;">
+                        <div style="font-size:2rem;font-weight:700;color:#ff4d6d;">${stats?.totalParticipants || 0}</div>
+                        <div style="color:#888;font-size:0.85rem;">Participants</div>
+                    </div>
+                    <div style="text-align:center;padding:20px;background:#fff5f7;border-radius:16px;">
+                        <div style="font-size:2rem;font-weight:700;color:#ff4d6d;">${stats?.matchCount || 0}</div>
+                        <div style="color:#888;font-size:0.85rem;">Matches</div>
+                    </div>
+                    <div style="text-align:center;padding:20px;background:#fff5f7;border-radius:16px;">
+                        <div style="font-size:2rem;font-weight:700;color:#ff4d6d;">${stats?.avgCompatibility || 0}%</div>
+                        <div style="color:#888;font-size:0.85rem;">Avg Match</div>
+                    </div>
+                </div>
+        `;
+        
+        if (matches && matches.length > 0) {
+            html += '<h3 style="color:#333;margin-bottom:15px;">💘 Your Matches</h3>';
+            matches.forEach((match, index) => {
+                const score = Math.round(match.score);
+                const scoreColor = score >= 70 ? '#28a745' : score >= 40 ? '#ffc107' : '#dc3545';
+                
+                html += `
+                    <div style="display:flex;align-items:center;background:linear-gradient(135deg,#fff5f7,#fff);border-radius:16px;padding:20px;margin-bottom:15px;border:2px solid #ffe0e6;">
+                        <div style="width:45px;height:45px;background:#ff4d6d;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.2rem;margin-right:15px;">${index + 1}</div>
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                                <span style="font-weight:600;color:#333;">${match.person1?.email?.split('@')[0] || 'You'}</span>
+                                <span style="color:#ff4d6d;">💕</span>
+                                <span style="font-weight:600;color:#333;">${match.person2?.email?.split('@')[0] || 'Match'}</span>
+                            </div>
+                            <div style="color:#888;font-size:0.85rem;margin-top:5px;">
+                                ${match.person2?.gender || ''} • Grade ${match.person2?.grade || '?'} • Age ${match.person2?.age || '?'}
+                            </div>
+                        </div>
+                        <div style="text-align:center;min-width:70px;">
+                            <div style="font-size:1.4rem;font-weight:700;color:${scoreColor};">${score}%</div>
+                            <div style="color:#999;font-size:0.7rem;">match</div>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += `
+                <div style="text-align:center;padding:40px;color:#888;">
+                    <div style="font-size:3rem;margin-bottom:10px;">📭</div>
+                    <p>No matches found for your account.</p>
+                </div>
+            `;
+        }
+        
+        html += `
+            </div>
+            <div style="text-align:center;margin-top:20px;">
+                <a href="./" style="display:inline-block;padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;text-decoration:none;border-radius:50px;font-weight:600;box-shadow:0 6px 20px rgba(255,77,109,0.3);">
+                    ← Back to Home
+                </a>
+            </div>
+        `;
+        
+        container.innerHTML = html;
+        
+    } catch (error) {
+        console.error('Error loading results:', error);
+        container.innerHTML = `
+            <div class="question-card" style="text-align:center;padding:60px 40px;">
+                <div style="font-size:5rem;margin-bottom:20px;">❌</div>
+                <h2 style="color:#ff4d6d;margin-bottom:20px;">Error Loading Results</h2>
+                <p style="color:#666;margin-bottom:30px;">${error.message}</p>
+                <button onclick="location.reload()" style="padding:15px 40px;background:linear-gradient(135deg,#ff4d6d,#c9184a);color:white;border:none;border-radius:50px;font-weight:600;cursor:pointer;">
+                    🔄 Try Again
+                </button>
+            </div>
+        `;
+    }
+}
+
 // Show message that form is closed or already submitted
 function showFormClosedMessage(reason, email) {
+    // If results are visible, show the actual results instead
+    if (reason === 'results_visible') {
+        showResultsPage();
+        return;
+    }
+    
     const container = document.querySelector('.container');
     if (!container) return;
     
@@ -144,12 +296,6 @@ function showFormClosedMessage(reason, email) {
         message = `You've already completed the questionnaire${email ? ' with ' + email : ''}.<br><br>
             <strong>Come back on February 14th</strong> to see your match results! 🎉<br><br>
             <span style="font-size:0.9rem;color:#999;">Can't wait to show you who you matched with! 💘</span>`;
-    } else if (reason === 'results_visible') {
-        icon = '🔒';
-        title = 'Forms are Closed';
-        message = `The questionnaire is now closed and results are being processed!<br><br>
-            <strong>Come back on February 14th</strong> to see the matches! 💕<br><br>
-            <span style="font-size:0.9rem;color:#999;">We're excited to reveal everyone's matches soon!</span>`;
     } else {
         icon = '⏰';
         title = 'Come Back Later';
