@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Preview - OpenCS</title>
+    <script src="/backgrounds.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #bg-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .artist-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .artist-desc {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            background: #22c55e;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #16a34a;
+            transform: scale(1.02);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        /* Navigation arrows */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.2s;
+            color: #fff;
+            font-size: 1.5rem;
+        }
+
+        .nav-arrow:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #22c55e;
+        }
+
+        .nav-prev { left: 1.5rem; }
+        .nav-next { right: 1.5rem; }
+
+        /* Keyboard hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+            z-index: 100;
+        }
+
+        kbd {
+            background: rgba(255,255,255,0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-container"></div>
+
+    <div class="overlay">
+        <div class="info">
+            <div class="artist-name" id="artist-name">Loading...</div>
+            <div class="artist-desc" id="artist-desc"></div>
+        </div>
+        <div class="controls">
+            <select id="bg-select"></select>
+            <a href="/" class="btn btn-ghost">Back to Site</a>
+        </div>
+    </div>
+
+    <button class="nav-arrow nav-prev" onclick="prevBackground()">←</button>
+    <button class="nav-arrow nav-next" onclick="nextBackground()">→</button>
+
+    <div class="keyboard-hint">
+        Use <kbd>←</kbd> <kbd>→</kbd> arrow keys to navigate
+    </div>
+
+    <script>
+        const backgrounds = [
+            { key: 'escher', name: 'M.C. Escher', description: 'Impossible geometry and infinite tessellations' },
+            { key: 'vangogh', name: 'Vincent van Gogh', description: 'Swirling starry night brushstrokes' },
+            { key: 'mondrian', name: 'Piet Mondrian', description: 'Bold primary colors and geometric grids' },
+            { key: 'kandinsky', name: 'Wassily Kandinsky', description: 'Abstract circles, lines, and geometric harmony' },
+            { key: 'pollock', name: 'Jackson Pollock', description: 'Energetic drip and splatter expressionism' },
+            { key: 'hokusai', name: 'Katsushika Hokusai', description: 'The Great Wave Japanese woodblock style' },
+            { key: 'klimt', name: 'Gustav Klimt', description: 'Opulent gold patterns and Art Nouveau elegance' },
+            { key: 'haring', name: 'Keith Haring', description: 'Bold pop art with dancing figures' },
+            { key: 'monet', name: 'Claude Monet', description: 'Soft impressionist water lilies and reflections' },
+            { key: 'dali', name: 'Salvador Dalí', description: 'Surrealist melting clocks and dreamscapes' }
+        ];
+
+        let currentIndex = 0;
+        const container = document.getElementById('bg-container');
+        const select = document.getElementById('bg-select');
+        const nameEl = document.getElementById('artist-name');
+        const descEl = document.getElementById('artist-desc');
+
+        // Populate select
+        backgrounds.forEach((bg, i) => {
+            const option = document.createElement('option');
+            option.value = bg.key;
+            option.textContent = bg.name;
+            select.appendChild(option);
+        });
+
+        // Get initial background from URL
+        const params = new URLSearchParams(window.location.search);
+        const initialBg = params.get('bg');
+        if (initialBg) {
+            const idx = backgrounds.findIndex(b => b.key === initialBg);
+            if (idx !== -1) currentIndex = idx;
+        }
+
+        function loadBackground(key) {
+            // Clear previous
+            container.innerHTML = '';
+            
+            const bg = backgrounds.find(b => b.key === key);
+            if (bg) {
+                nameEl.textContent = bg.name;
+                descEl.textContent = bg.description;
+                select.value = key;
+                
+                // Initialize background
+                if (typeof initArtistBackground === 'function') {
+                    initArtistBackground(key, container, '#22c55e');
+                }
+                
+                // Update URL without reload
+                const url = new URL(window.location);
+                url.searchParams.set('bg', key);
+                window.history.replaceState({}, '', url);
+            }
+        }
+
+        function prevBackground() {
+            currentIndex = (currentIndex - 1 + backgrounds.length) % backgrounds.length;
+            loadBackground(backgrounds[currentIndex].key);
+        }
+
+        function nextBackground() {
+            currentIndex = (currentIndex + 1) % backgrounds.length;
+            loadBackground(backgrounds[currentIndex].key);
+        }
+
+        // Select change
+        select.addEventListener('change', (e) => {
+            const idx = backgrounds.findIndex(b => b.key === e.target.value);
+            if (idx !== -1) {
+                currentIndex = idx;
+                loadBackground(e.target.value);
+            }
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                prevBackground();
+            } else if (e.key === 'ArrowRight') {
+                nextBackground();
+            } else if (e.key === 'Escape') {
+                window.close();
+            }
+        });
+
+        // Initial load
+        loadBackground(backgrounds[currentIndex].key);
+    </script>
+</body>
+</html>

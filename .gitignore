@@ -1,0 +1,10 @@
+node_modules/
+*.log
+.env
+.DS_Store
+*.backup
+config/*.json
+!config/.gitkeep
+data/
+logs/
+secret.key

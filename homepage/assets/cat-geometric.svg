@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="currentColor">
+  <!-- Stylized geometric cat face - Escher inspired -->
+  <g stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Head outline - tessellation style -->
+    <path d="M100 20 L140 60 L180 50 L160 100 L180 150 L140 140 L100 180 L60 140 L20 150 L40 100 L20 50 L60 60 Z" />
+    
+    <!-- Ears - triangular -->
+    <path d="M60 60 L40 20 L80 40 Z" />
+    <path d="M140 60 L160 20 L120 40 Z" />
+    
+    <!-- Eyes - geometric circles -->
+    <circle cx="70" cy="90" r="15" />
+    <circle cx="70" cy="90" r="5" fill="currentColor" />
+    <circle cx="130" cy="90" r="15" />
+    <circle cx="130" cy="90" r="5" fill="currentColor" />
+    
+    <!-- Nose - diamond -->
+    <path d="M100 110 L110 120 L100 130 L90 120 Z" fill="currentColor" />
+    
+    <!-- Whiskers -->
+    <line x1="90" y1="125" x2="50" y2="115" />
+    <line x1="90" y1="130" x2="50" y2="130" />
+    <line x1="90" y1="135" x2="50" y2="145" />
+    <line x1="110" y1="125" x2="150" y2="115" />
+    <line x1="110" y1="130" x2="150" y2="130" />
+    <line x1="110" y1="135" x2="150" y2="145" />
+    
+    <!-- Mouth -->
+    <path d="M100 130 L100 145" />
+    <path d="M100 145 Q 90 155 80 150" />
+    <path d="M100 145 Q 110 155 120 150" />
+  </g>
+</svg>

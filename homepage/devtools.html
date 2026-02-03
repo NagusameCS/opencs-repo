@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Tools - OpenCS</title>
+    <meta name="description" content="A curated collection of developer tools for coding, testing, and productivity.">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@400" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a1628;
+            --bg-secondary: #0d1f38;
+            --bg-tertiary: #132844;
+            --border: #1e4976;
+            --grid-line: rgba(65, 150, 240, 0.08);
+            --text: #e4efff;
+            --text-muted: #7ba3d4;
+            --accent: #41a0ff;
+            --accent-hover: #5ab5ff;
+            --accent-dim: rgba(65, 160, 255, 0.15);
+            --white-line: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+            border: 2px solid var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) var(--bg);
+        }
+
+        body {
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            position: relative;
+        }
+        
+        /* Blueprint grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: 
+                linear-gradient(var(--grid-line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(rgba(65, 150, 240, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(65, 150, 240, 0.03) 1px, transparent 1px);
+            background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(to bottom, var(--bg-secondary), rgba(13, 31, 56, 0.95));
+            border-bottom: 2px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        .logo-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        /* Search & Filter */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim), 0 0 20px var(--accent-dim);
+        }
+        
+        .search-box input::placeholder {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        .search-box .material-symbols-outlined {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--accent);
+        }
+
+        .category-filter {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+            font-weight: 600;
+            box-shadow: 0 0 15px var(--accent-dim);
+        }
+
+        /* Main content */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem 4rem;
+        }
+
+        .category-section {
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .category-section::before {
+            content: '';
+            position: absolute;
+            left: -1rem;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+            opacity: 0.5;
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px dashed var(--border);
+            position: relative;
+        }
+        
+        .category-header::after {
+            content: '◇';
+            position: absolute;
+            right: 0;
+            color: var(--accent);
+            opacity: 0.5;
+            font-size: 0.8rem;
+        }
+
+        .category-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        .category-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .category-count {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .tool-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1.25rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: relative;
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .tool-card::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 6px;
+            height: 6px;
+            border: 1px solid var(--border);
+            border-radius: 1px;
+            transform: rotate(45deg);
+        }
+
+        .tool-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px var(--accent-dim), 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+        
+        .tool-card:hover::after {
+            border-color: var(--accent);
+            background: var(--accent);
+        }
+
+        .tool-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tool-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-dim);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--accent);
+            font-size: 18px;
+            overflow: hidden;
+        }
+        
+        .tool-icon img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+        
+        .tool-icon img.favicon-error {
+            display: none;
+        }
+        
+        .tool-icon .fallback-icon {
+            display: none;
+        }
+        
+        .tool-icon img.favicon-error + .fallback-icon {
+            display: block;
+        }
+
+        .tool-name {
+            font-weight: 600;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .tool-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .tool-url {
+            font-size: 0.75rem;
+            color: var(--accent);
+            opacity: 0.7;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+        }
+
+        .stats-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .no-results .material-symbols-outlined {
+            font-size: 48px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .category-filter {
+                width: 100%;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 0.5rem;
+            }
+
+            .filter-btn {
+                white-space: nowrap;
+            }
+            
+            .category-section::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <a href="/" class="logo">OpenCS</a>
+                <span class="logo-subtitle">Dev Tools</span>
+            </div>
+            <a href="/" class="back-link">
+                <span class="material-symbols-outlined">arrow_back</span>
+                Back to Home
+            </a>
+        </div>
+    </header>
+
+    <div class="stats-bar">
+        <div class="stats-content">
+            <span class="stat-item"><span class="stat-value" id="total-count">0</span> tools</span>
+            <span class="stat-item"><span class="stat-value" id="category-count">0</span> categories</span>
+            <span class="stat-item">Curated by the OpenCS team</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="search-box">
+            <span class="material-symbols-outlined">search</span>
+            <input type="text" id="search" placeholder="Search tools...">
+        </div>
+        <div class="category-filter" id="filters">
+            <button class="filter-btn active" data-category="all">All</button>
+        </div>
+    </div>
+
+    <main id="tools-container">
+        <div class="no-results" id="loading">
+            <span class="material-symbols-outlined">hourglass_empty</span>
+            <p>Loading tools...</p>
+        </div>
+    </main>
+
+    <footer>
+        <p>Built with ♥ by <a href="/">OpenCS</a> • <a href="https://github.com/OpenCS-ontmern" target="_blank">GitHub</a></p>
+    </footer>
+
+    <script>
+        // Category icons mapping
+        const categoryIcons = {
+            'Text': 'text_fields',
+            'Data': 'data_object',
+            'Security': 'security',
+            'API': 'api',
+            'Design': 'palette',
+            'DevOps': 'cloud',
+            'Docs': 'description',
+            'Git': 'commit',
+            'Web': 'language',
+            'NPM': 'inventory_2',
+            'Code': 'code',
+            'AI': 'smart_toy',
+            'Database': 'database',
+            'Testing': 'bug_report',
+            'Hosting': 'dns',
+            'Utility': 'build'
+        };
+
+        // Tool icons based on id or category
+        const toolIcons = {
+            'regex': 'regular_expression',
+            'diff': 'difference',
+            'lorem': 'notes',
+            'texttools': 'format_size',
+            'markdown': 'edit_note',
+            'json': 'data_object',
+            'base64': 'key',
+            'uuid': 'fingerprint',
+            'timestamp': 'schedule',
+            'yaml': 'code',
+            'csv': 'table_chart',
+            'sql': 'storage',
+            'jwt': 'token',
+            'hash': 'tag',
+            'ssl': 'verified_user',
+            'password': 'password',
+            'cors': 'shield',
+            'csp': 'policy',
+            'curl': 'http',
+            'postman': 'send',
+            'httpbin': 'http',
+            'reqbin': 'send',
+            'swagger': 'api',
+            'webhook': 'webhook',
+            'graphql': 'hub',
+            'colors': 'colorize',
+            'carbon': 'photo_camera',
+            'excalidraw': 'draw',
+            'figma': 'design_services',
+            'contrast': 'contrast',
+            'fontpair': 'font_download',
+            'svgomg': 'image',
+            'squoosh': 'compress',
+            'cron': 'timer',
+            'ngrok': 'tunnel',
+            'dns': 'dns',
+            'headers': 'http',
+            'uptime': 'monitoring',
+            'pagespeed': 'speed',
+            'gtmetrix': 'insights',
+            'devdocs': 'menu_book',
+            'readme': 'description',
+            'mdn': 'school',
+            'cheatsheets': 'assignment',
+            'tldr': 'short_text',
+            'gitignore': 'block',
+            'gitmoji': 'emoji_emotions',
+            'gitexplorer': 'explore',
+            'conventional': 'check_circle',
+            'linehook': 'link',
+            'caniuse': 'devices',
+            'validator': 'check',
+            'cssminify': 'compress',
+            'autoprefixer': 'auto_fix_high',
+            'responsive': 'devices',
+            'metatags': 'sell',
+            'bundlephobia': 'analytics',
+            'npms': 'search',
+            'npm-trends': 'trending_up',
+            'socket': 'security',
+            'playground': 'play_circle',
+            'codesandbox': 'web',
+            'stackblitz': 'bolt',
+            'replit': 'terminal',
+            'prettier': 'format_indent_increase',
+            'ast': 'account_tree',
+            'goplay': 'play_arrow',
+            'rustplay': 'play_arrow',
+            'pytutor': 'visibility',
+            'huggingface': 'face',
+            'replicate': 'content_copy',
+            'openai': 'psychology',
+            'gradio': 'apps',
+            'tensorflow': 'hub',
+            'dbdiagram': 'schema',
+            'sqlfiddle': 'storage',
+            'planetscale': 'rocket',
+            'supabase': 'database',
+            'neon': 'database',
+            'playwright': 'theaters',
+            'cypress': 'science',
+            'mockaroo': 'shuffle',
+            'faker': 'shuffle',
+            'vercel': 'rocket_launch',
+            'netlify': 'cloud_upload',
+            'railway': 'train',
+            'fly': 'flight',
+            'render': 'cloud',
+            'deno': 'bolt',
+            'explainshell': 'terminal',
+            'transform': 'transform',
+            'jsoncrack': 'account_tree',
+            'regex-vis': 'visibility',
+            'epoch': 'access_time',
+            'tableconvert': 'table_chart'
+        };
+
+        let allTools = [];
+        let currentCategory = 'all';
+        let searchQuery = '';
+
+        async function loadTools() {
+            try {
+                const res = await fetch('/api/public/devtools');
+                const data = await res.json();
+                allTools = data.tools || [];
+                
+                // Update stats
+                const categories = [...new Set(allTools.map(t => t.category))];
+                document.getElementById('total-count').textContent = allTools.length;
+                document.getElementById('category-count').textContent = categories.length;
+                
+                // Create filter buttons
+                const filtersEl = document.getElementById('filters');
+                categories.sort().forEach(cat => {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    btn.dataset.category = cat;
+                    btn.textContent = cat;
+                    btn.onclick = () => setCategory(cat);
+                    filtersEl.appendChild(btn);
+                });
+                
+                renderTools();
+            } catch (err) {
+                console.error('Failed to load tools:', err);
+                document.getElementById('loading').innerHTML = `
+                    <span class="material-symbols-outlined">error</span>
+                    <p>Failed to load tools. Please try again later.</p>
+                `;
+            }
+        }
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === cat);
+            });
+            renderTools();
+        }
+
+        function filterTools() {
+            return allTools.filter(tool => {
+                const matchesCategory = currentCategory === 'all' || tool.category === currentCategory;
+                const matchesSearch = !searchQuery || 
+                    tool.name.toLowerCase().includes(searchQuery) ||
+                    tool.desc.toLowerCase().includes(searchQuery) ||
+                    tool.category.toLowerCase().includes(searchQuery);
+                return matchesCategory && matchesSearch;
+            });
+        }
+
+        function renderTools() {
+            const container = document.getElementById('tools-container');
+            const filtered = filterTools();
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="no-results">
+                        <span class="material-symbols-outlined">search_off</span>
+                        <p>No tools found matching your criteria</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group by category
+            const grouped = {};
+            filtered.forEach(tool => {
+                if (!grouped[tool.category]) grouped[tool.category] = [];
+                grouped[tool.category].push(tool);
+            });
+            
+            // Sort categories
+            const sortedCategories = Object.keys(grouped).sort();
+            
+            let html = '';
+            sortedCategories.forEach(category => {
+                const tools = grouped[category];
+                const catIcon = categoryIcons[category] || 'folder';
+                
+                html += `
+                    <section class="category-section">
+                        <div class="category-header">
+                            <div class="category-icon">
+                                <span class="material-symbols-outlined">${catIcon}</span>
+                            </div>
+                            <h2 class="category-title">${category}</h2>
+                            <span class="category-count">${tools.length} tool${tools.length !== 1 ? 's' : ''}</span>
+                        </div>
+                        <div class="tools-grid">
+                            ${tools.map(tool => {
+                                const icon = toolIcons[tool.id] || categoryIcons[tool.category] || 'link';
+                                const domain = new URL(tool.url).hostname.replace('www.', '');
+                                const faviconUrl = getFaviconUrl(tool.url);
+                                return `
+                                    <a href="${tool.url}" target="_blank" class="tool-card">
+                                        <div class="tool-header">
+                                            <div class="tool-icon">
+                                                ${faviconUrl ? `<img src="${faviconUrl}" alt="" class="tool-favicon"><span class="material-symbols-outlined fallback-icon">${icon}</span>` : `<span class="material-symbols-outlined">${icon}</span>`}
+                                            </div>
+                                            <span class="tool-name">${tool.name}</span>
+                                        </div>
+                                        <p class="tool-desc">${tool.desc}</p>
+                                        <span class="tool-url">${domain}</span>
+                                    </a>
+                                `;
+                            }).join('')}
+                        </div>
+                    </section>
+                `;
+            });
+            
+            container.innerHTML = html;
+            
+            // Handle favicon load errors - show fallback icon
+            document.querySelectorAll('.tool-favicon').forEach(img => {
+                img.onerror = function() {
+                    this.classList.add('favicon-error');
+                };
+            });
+        }
+
+        // Get favicon URL for a domain
+        function getFaviconUrl(url) {
+            try {
+                const domain = new URL(url).hostname;
+                // Use Google's favicon service as it's reliable
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Search handler
+        document.getElementById('search').addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            renderTools();
+        });
+
+        // Initial "All" button handler
+        document.querySelector('.filter-btn[data-category="all"]').onclick = () => setCategory('all');
+
+        // Load tools on page load
+        loadTools();
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+# robots.txt for opencs.dev
+User-agent: *
+Allow: /
+Disallow: /portal/
+Disallow: /api/
+
+# Sitemap (optional)
+# Sitemap: https://opencs.dev/sitemap.xml

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Server Status - OpenCS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 1.1em; }
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .status-indicator.online {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-indicator.offline {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.online .status-dot {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+        .status-indicator.offline .status-dot {
+            background: #dc3545;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .server-address {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #11998e;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: #e9f7f5;
+            border-radius: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #11998e;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .refresh-btn {
+            background: #11998e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        .refresh-btn:hover {
+            background: #0d7a6f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 Minecraft Server</h1>
+        <p class="subtitle">Live server status</p>
+        
+        <div class="status-card">
+            <div class="status-header">
+                <h2 style="margin: 0;">Server Status</h2>
+                <button class="refresh-btn" onclick="loadStatus()">↻ Refresh</button>
+            </div>
+            
+            <div id="statusIndicator" class="status-indicator offline">
+                <span class="status-dot"></span>
+                Checking...
+            </div>
+
+            <div class="server-address">mc.opencs.dev</div>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Players Online</div>
+                    <div class="info-value" id="playersOnline">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Max Players</div>
+                    <div class="info-value" id="maxPlayers">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Version</div>
+                    <div class="info-value" id="version" style="font-size: 18px;">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Port</div>
+                    <div class="info-value" style="font-size: 20px;">25565</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 How to Connect</h3>
+            <ol>
+                <li>Open Minecraft (Java Edition)</li>
+                <li>Click "Multiplayer"</li>
+                <li>Click "Add Server"</li>
+                <li>Enter server address: <strong>mc.opencs.dev</strong></li>
+                <li>Make sure you're <a href="/mcwhitelist">whitelisted</a> first!</li>
+            </ol>
+        </div>
+
+        <a href="/" class="back-link">← Back to OpenCS</a>
+    </div>
+
+    <script>
+        async function loadStatus() {
+            try {
+                const response = await fetch('/api/minecraft/status');
+                const data = await response.json();
+                
+                const statusIndicator = document.getElementById('statusIndicator');
+                
+                if (data.online) {
+                    statusIndicator.className = 'status-indicator online';
+                    statusIndicator.innerHTML = '<span class="status-dot"></span> Online';
+                    
+                    document.getElementById('playersOnline').textContent = data.players.online;
+                    document.getElementById('maxPlayers').textContent = data.players.max;
+                    document.getElementById('version').textContent = data.version;
+                } else {
+                    statusIndicator.className = 'status-indicator offline';
+                    statusIndicator.innerHTML = '<span class="status-dot"></span> Offline';
+                    
+                    document.getElementById('playersOnline').textContent = '-';
+                    document.getElementById('maxPlayers').textContent = '-';
+                    document.getElementById('version').textContent = '-';
+                }
+            } catch (error) {
+                console.error('Failed to load status:', error);
+                const statusIndicator = document.getElementById('statusIndicator');
+                statusIndicator.className = 'status-indicator offline';
+                statusIndicator.innerHTML = '<span class="status-dot"></span> Error';
+            }
+        }
+
+        loadStatus();
+        setInterval(loadStatus, 5000); // Refresh every 5 seconds
+    </script>
+</body>
+</html>

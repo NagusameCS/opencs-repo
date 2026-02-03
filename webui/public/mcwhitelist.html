@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Whitelist - OpenCS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 2.5em; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 1.1em; }
+        .server-info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .server-address {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus { outline: none; border-color: #667eea; }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        button:active { transform: translateY(0); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .message { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; display: block; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; display: block; }
+        .whitelist { margin-top: 30px; }
+        .whitelist h2 { color: #333; margin-bottom: 15px; }
+        .player-list { list-style: none; }
+        .player-item {
+            background: #f8f9fa;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .player-name { font-weight: 600; color: #333; }
+        .remove-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            width: auto;
+        }
+        .remove-btn:hover { background: #c82333; }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Minecraft Server</h1>
+        <p class="subtitle">Request whitelist access</p>
+        
+        <div class="server-info">
+            <div class="server-address">mc.opencs.dev</div>
+        </div>
+
+        <div class="form-group">
+            <label for="username">Minecraft Username:</label>
+            <input type="text" id="username" placeholder="Enter your Minecraft username" maxlength="16">
+        </div>
+
+        <button id="addBtn" onclick="addToWhitelist()">Request Whitelist</button>
+
+        <div id="message" class="message"></div>
+
+        <div class="whitelist">
+            <h2>Whitelisted Players</h2>
+            <ul id="playerList" class="player-list">
+                <li style="color: #999;">Loading...</li>
+            </ul>
+        </div>
+
+        <a href="/" class="back-link">← Back to OpenCS</a>
+    </div>
+
+    <script>
+        async function loadWhitelist() {
+            try {
+                const response = await fetch('/api/minecraft/whitelist');
+                const data = await response.json();
+                
+                const playerList = document.getElementById('playerList');
+                if (data.whitelist && data.whitelist.length > 0) {
+                    playerList.innerHTML = data.whitelist.map(player => `
+                        <li class="player-item">
+                            <span class="player-name">${player.name}</span>
+                            <button class="remove-btn" onclick="removeFromWhitelist('${player.name}')">Remove</button>
+                        </li>
+                    `).join('');
+                } else {
+                    playerList.innerHTML = '<li style="color: #999;">No players whitelisted yet</li>';
+                }
+            } catch (error) {
+                document.getElementById('playerList').innerHTML = '<li style="color: #999;">Failed to load whitelist</li>';
+            }
+        }
+
+        async function addToWhitelist() {
+            const username = document.getElementById('username').value.trim();
+            const btn = document.getElementById('addBtn');
+
+            if (!username) {
+                showMessage('Please enter a Minecraft username', 'error');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9_]{1,16}$/.test(username)) {
+                showMessage('Invalid Minecraft username format', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Adding...';
+
+            try {
+                const response = await fetch('/api/minecraft/whitelist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage(`Successfully added ${data.player.name} to the whitelist!`, 'success');
+                    document.getElementById('username').value = '';
+                    loadWhitelist();
+                } else {
+                    showMessage(data.error || 'Failed to add player', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Request Whitelist';
+            }
+        }
+
+        async function removeFromWhitelist(username) {
+            if (!confirm(`Remove ${username} from whitelist?`)) return;
+
+            try {
+                const response = await fetch(`/api/minecraft/whitelist/${username}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showMessage(`Successfully removed ${username}`, 'success');
+                    loadWhitelist();
+                } else {
+                    showMessage('Failed to remove player', 'error');
+                }
+            } catch (error) {
+                showMessage('Network error. Please try again.', 'error');
+            }
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            setTimeout(() => {
+                messageEl.className = 'message';
+            }, 5000);
+        }
+
+        document.getElementById('username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addToWhitelist();
+        });
+
+        loadWhitelist();
+        setInterval(loadWhitelist, 10000);
+    </script>
+</body>
+</html>
