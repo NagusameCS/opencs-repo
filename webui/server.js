@@ -1243,6 +1243,71 @@ apiRouter.get('/webhook-secret', requireAuth, (req, res) => {
     res.json({ secret });
 });
 
+// GitHub Webhook receiver - auto deploy on push
+app.post('/webhook/github', express.raw({ type: 'application/json' }), (req, res) => {
+    const secretFile = path.join(CONFIG_DIR, 'webhook-secret.txt');
+    
+    if (!fs.existsSync(secretFile)) {
+        console.log('Webhook: No secret configured');
+        return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
+    
+    const secret = fs.readFileSync(secretFile, 'utf8').trim();
+    const signature = req.headers['x-hub-signature-256'];
+    
+    if (!signature) {
+        console.log('Webhook: No signature provided');
+        return res.status(401).json({ error: 'No signature' });
+    }
+    
+    // Verify signature
+    const payload = req.body;
+    const hmac = crypto.createHmac('sha256', secret);
+    const digest = 'sha256=' + hmac.update(payload).digest('hex');
+    
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest))) {
+        console.log('Webhook: Invalid signature');
+        return res.status(401).json({ error: 'Invalid signature' });
+    }
+    
+    // Parse the payload
+    const data = JSON.parse(payload.toString());
+    const repo = data.repository?.name || 'unknown';
+    const ref = data.ref || '';
+    
+    console.log(`Webhook: Received push to ${repo} on ${ref}`);
+    
+    // Only deploy on main/master branch pushes
+    if (ref !== 'refs/heads/main' && ref !== 'refs/heads/master') {
+        return res.json({ status: 'ignored', reason: 'Not main branch' });
+    }
+    
+    // Run deploy script
+    const deployScript = path.join(__dirname, '..', 'deploy.sh');
+    
+    exec(`cd ${path.join(__dirname, '..')} && git pull && cd webui && npm install --production`, {
+        shell: '/bin/bash',
+        timeout: 120000
+    }, (err, stdout, stderr) => {
+        if (err) {
+            console.error('Webhook deploy error:', stderr);
+        } else {
+            console.log('Webhook: Git pull complete');
+        }
+        
+        // Restart the server via pm2
+        exec('pm2 restart vps-portal', (err2) => {
+            if (err2) {
+                console.error('Webhook: PM2 restart failed:', err2);
+            } else {
+                console.log('Webhook: PM2 restart triggered');
+            }
+        });
+    });
+    
+    res.json({ status: 'deploying', repo, ref });
+});
+
 // ============ TERMINAL (Fallback mode) ============
 
 apiRouter.post('/terminal/exec', requireAuth, (req, res) => {
